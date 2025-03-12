@@ -1,0 +1,73 @@
+name: Commit Policy Validation Rules
+
+on:
+  push:
+    branches:
+      - '**'                  # Run on all branches
+      - '!main'               # Exclude main
+      - '!master'             # Exclude master
+      - '!develop'            # Exclude develop
+      - '!prod'               # Exclude prod
+
+jobs:
+  validate-commits:
+    name: Validate Commit Messages
+    runs-on: athena-runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history
+
+      - name: Validate Commit Messages
+        run: |
+          #!/bin/bash
+          # Set colors for output
+          YELLOW='\033[1;33m'
+          RED='\033[0;31m'
+          CYAN='\033[1;36m'
+          NC='\033[0m'
+          BOLD='\033[1m'
+          NORM='\033[0m'
+
+          # Regular expressions
+          JIRA_REGEX="([A-Z][A-Z0-9_]{1,10})+-[0-9]+"
+          CONVENTIONAL_REGEX="^(feat|fix|chore|docs|style|refactor|test|perf|ci|build|revert|release)(\\(.+\\))?: .+$"
+
+          # Fetch commit messages in the push
+          COMMITS=$(git log --oneline ${GITHUB_SHA}^...HEAD)
+
+          # Loop through commit messages for validation
+          while IFS= read -r line; do
+              # Extract commit message, skipping hash
+              COMMIT_MESSAGE=$(echo "$line" | awk '{$1=""; print $0}' | sed 's/^ //')
+              COMMIT_MESSAGE_SIZE=${#COMMIT_MESSAGE}
+
+              # Validate commit message against either Jira or conventional commit
+              if [[ $COMMIT_MESSAGE =~ $JIRA_REGEX ]]; then
+                  echo -e "[${CYAN}VALIDATION${NC}]: Commit message contains Jira issue number. Validation passed."
+                  continue
+              elif [[ $COMMIT_MESSAGE =~ $CONVENTIONAL_REGEX ]]; then
+                  echo -e "[${CYAN}VALIDATION${NC}]: Commit message follows conventional commit format. Validation passed."
+                  continue
+              else
+                  echo ""
+                  echo -e "[${RED}COMMIT-POLICY${NC}]: Commit message must contain either:"
+                  echo -e "  - A Jira issue number (e.g., ${CYAN}JIRA-123: Your commit message${NC})"
+                  echo -e "  - Or follow the conventional commit format (e.g., ${CYAN}feat(scope): add feature${NC})"
+                  echo ""
+                  exit 1
+              fi
+
+              # Validate commit message length
+              if [[ $COMMIT_MESSAGE_SIZE -lt 40 ]]; then
+                  echo ""
+                  echo -e "[${RED}COMMIT-POLICY${NC}]: Commit message must be at least 40 characters long. Found: ${CYAN}$COMMIT_MESSAGE${NC}"
+                  echo ""
+                  exit 1
+              fi
+          done <<< "$COMMITS"
+
+          # All validations passed
+          echo -e "${CYAN}All validations passed.${NC}"

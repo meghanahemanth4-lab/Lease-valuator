@@ -1,0 +1,51 @@
+name: Add PR Description
+
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+
+jobs:
+  pr-description_job:
+    runs-on: athena-runner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Add description
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.token}}
+          script: |
+            const title = context.payload.pull_request.title;
+            const jiraTicketRegex = "([A-Z][A-Z0-9_]{1,10})+-[0-9]*";
+            const match = title.match(jiraTicketRegex);
+            const descriptionTxt = ">  _**Please provide a brief summary for committed JIRA Tickets. This helps reviewers understand the context of your changes.**_";
+            //console.log(context.issue);
+            //if (match) {
+            //  console.log(`JIRA ticket found: ${match[0]}`);
+            //}
+            const { owner, repo, number } = context.issue;
+            if (!context.payload.pull_request.body) {
+              core.setFailed("PR description is empty. Please provide a description of the changes.");
+            } else if(!context.payload.pull_request.body.includes("What has changed")) {
+              const newBody = `
+              ## Description - ${match ? match[0] : 'No JIRA Found'}
+
+              ${descriptionTxt}
+
+              ### What has changed?
+
+              ${context.payload.pull_request.body}`;
+              const updates = await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: number,
+                body: newBody,
+              });
+            } else {
+              console.log("----> No Changes Required! <----")
+            }
+            
+            

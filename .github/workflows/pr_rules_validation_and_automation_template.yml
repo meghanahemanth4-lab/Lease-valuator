@@ -1,0 +1,126 @@
+name: PR Rules Automation And Validation Template
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+jobs:
+  pr_rules_automation_and_validation:
+    runs-on: athena-runner
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Fetching latest commits  
+      run: git fetch origin ${{ github.event.pull_request.head.ref }}
+    - name: Updating PR and Validating Rules
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.token}}
+        script: |
+          const JIRA_TICKET_REGEX = "([A-Z][A-Z0-9_]{1,10})+-[0-9]*";
+          const { owner, repo, number } = context.issue;
+          const { title, body } = context.payload.pull_request;
+          const headRef = context.payload.pull_request.head.ref;
+          const baseRef = context.payload.pull_request.base.ref;          
+          const commitMessage = 'SP-123';
+          
+          let comment = '';
+          let isValidationPassed = true;
+          let newBody = body;
+          
+          const isTitleHasJIRA = title.match(JIRA_TICKET_REGEX);
+          let isBranchSync = false;
+          const descriptionTxt = ">  _**Please provide a brief summary for committed JIRA Tickets. This helps reviewers understand the context of your changes.**_";
+          if(((headRef == "develop" || headRef == "main" || headRef.includes("-develop")) && (baseRef == "main" || baseRef == "prod")) || (headRef.includes("feature/") && baseRef == "develop")) {
+          isBranchSync = true;
+          }
+
+          if(isBranchSync) {
+
+          const newSyncTitle = `BRANCH SYNC: From ${headRef} to ${baseRef}`;
+          const newSyncBody = `
+            ## BRANCH SYNC
+
+            ### From ${headRef} Branch to ${baseRef} Branch`;
+
+          const updatesSyncData = await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: number,
+              title: newSyncTitle,
+              body: newSyncBody
+          });
+          comment += '&#x2705; Auto Applied the title and description template.\n';
+
+          } else {
+
+          if (!body) {
+            comment += '&#x274C; **PR description is empty. Please provide a description of the changes.**\n';
+            isValidationPassed = false;
+          } else if(body && !body.includes("CHANGES")) {
+            newBody = `
+             ## Description - ${isTitleHasJIRA ? isTitleHasJIRA[0] : 'No JIRA Found'}
+
+             ### CHANGES
+
+             ${context.payload.pull_request.body}`;
+            
+            const updates = await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: number,
+              body: newBody,
+            });
+            comment += '&#x2705; Auto Applied the description template.\n';
+            
+          } 
+          
+          if(newBody && newBody.includes("Please provide a brief summary for committed JIRA Tickets.")) {
+            comment += '&#x274C; **Please update the PR description.**\n';
+            isValidationPassed = false;
+          } else if (isValidationPassed) {
+            comment += '&#x2705; PR Description is defined properly.\n';
+          }          
+
+          // Check if the JIRA ticket number is included in the PR title.
+          if (isTitleHasJIRA) {
+            comment += '&#x2705; JIRA ticket number is included in the PR title.\n';
+          } else {
+            comment += '&#x274C; **JIRA ticket number is not included in the PR title.**\n';
+            isValidationPassed = false;
+          }
+
+          // Check if the JIRA ticket number is included in the commit message.
+          if (commitMessage.match(JIRA_TICKET_REGEX)) {
+            comment += '&#x2705; JIRA ticket number is included in the commit message.\n';
+          } else {
+            comment += '&#x274C; **Commit Message does not include JIRA ticket number.**\n';
+            isValidationPassed = false;
+          }
+
+          // Check if the JIRA ticket number is included in the branch name.
+          if (headRef.match(JIRA_TICKET_REGEX)) {
+            comment += '&#x2705; JIRA ticket number is included in the branch name.\n';
+          } else {
+            comment += '&#x274C; **Branch name does not include JIRA ticket number.**\n';
+            isValidationPassed = false;
+          }
+          
+          }
+
+          if (isValidationPassed) {
+            comment += '\n &#x2705; Validation Passed!.\n';
+          } else {
+            comment += '\n &#x1F6AB; Validation Failed!\n';
+          }
+          
+          github.rest.issues.createComment({
+            owner: owner,
+            repo: repo,
+            issue_number: number,
+            body: comment,
+          });
+
+          if(!isValidationPassed) {
+            core.setFailed("Some Checks Failed! Please check PR Comments for more info.");
+          }

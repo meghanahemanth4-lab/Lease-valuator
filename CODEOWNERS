@@ -1,0 +1,8 @@
+# Default Reviewers
+# * @spiro-devops @Spiro-DevOps
+
+# Any Changes in /hooks directory requires approval from below users
+/hooks/ @spiro-devops @Spiro-DevOps
+
+# Codeowners change ownership
+/CODEOWNERS @spiro-devops @Spiro-DevOps

@@ -1,0 +1,111 @@
+name: PR Automation And Validation
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+jobs:
+  validate_pull_request_standards:
+    runs-on: athena-runner
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Fetch latest commits  
+      run: git fetch origin ${{ github.event.pull_request.head.ref }}
+    - name: Auto Validation
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{secrets.token}}
+        script: |
+          //console.log("------------------",context);
+          const { owner, repo, number } = context.issue;
+          const { title, body } = context.payload.pull_request;
+          const headRef = context.payload.pull_request.head.ref
+          const commitMessage = 'SP-123';
+          //const JIRA_TICKET_REGEX = /([A-Z][A-Z0-9_]{1,10})+-[0-9]*/;
+          let comment = '';
+          let checksPassed = true;
+          let newBody = body;
+
+          //const title = context.payload.pull_request.title;
+          const JIRA_TICKET_REGEX = "([A-Z][A-Z0-9_]{1,10})+-[0-9]*";
+          const match = title.match(JIRA_TICKET_REGEX);
+          const descriptionTxt = ">  _**Please provide a brief summary for committed JIRA Tickets. This helps reviewers understand the context of your changes.**_";
+          //console.log(context.issue);
+          //if (match) {
+          //  console.log(`JIRA ticket found: ${match[0]}`);
+          //}
+          
+          if (!context.payload.pull_request.body) {
+            comment += '&#x274C; **PR description is empty. Please provide a description of the changes.**\n';
+            checksPassed = false;
+            //core.setFailed("PR description is empty. Please provide a description of the changes.");
+          } else if(context.payload.pull_request.body && !context.payload.pull_request.body.includes("What has changed")) {
+            newBody = `
+            ## Description - ${match ? match[0] : 'No JIRA Found'}
+
+            ${descriptionTxt}
+
+            ### What has changed?
+
+            ${context.payload.pull_request.body}`;
+            
+            const updates = await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: number,
+              body: newBody,
+            });
+            comment += '&#x2705; Auto Applied the description template.\n';
+          } else {
+            console.log("----> No Changes Required! <----")
+          }          
+
+          // Check if the JIRA ticket number is included in the PR title.
+          if (title.match(JIRA_TICKET_REGEX)) {
+            comment += '&#x2705; JIRA ticket number is included in the PR title.\n';
+          } else {
+            comment += '&#x274C; **JIRA ticket number is not included in the PR title.**\n';
+            checksPassed = false;
+          }
+
+          // Check if the JIRA ticket number is included in the commit message.
+          if (commitMessage.match(JIRA_TICKET_REGEX)) {
+            comment += '&#x2705; JIRA ticket number is included in the commit message.\n';
+          } else {
+            comment += '&#x274C; **JIRA ticket number is not included in the commit message.**\n';
+            checksPassed = false;
+          }
+
+          // Check if the JIRA ticket number is included in the branch name.
+          if (headRef.match(JIRA_TICKET_REGEX)) {
+            comment += '&#x2705; JIRA ticket number is included in the branch name.\n';
+          } else {
+            comment += '&#x274C; **JIRA ticket number is not included in the branch name.**\n';
+            checksPassed = false;
+          }
+
+          // Check if the PR title and description explain what has changed and why.
+          if(newBody.includes("Please provide a brief summary for committed JIRA Tickets.")) {
+            comment += '&#x274C; **Please update the description template.**\n';
+            checksPassed = false;
+          } else {
+            comment += '&#x2705; The PR title and description is not empty.\n';
+          }
+
+          if (checksPassed) {
+            comment += '\n &#x2705; All checklist items have been validated.\n';
+          } else {
+            comment += '\n &#x1F6AB; Validation Failed!\n';
+          }
+
+          github.rest.issues.createComment({
+            owner: owner,
+            repo: repo,
+            issue_number: number,
+            body: comment,
+          });
+
+          if(!checksPassed) {
+            core.setFailed("Some Checks Failed! Please check PR Comments for more info.");
+          }

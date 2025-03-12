@@ -1,0 +1,82 @@
+name: PR Checklist Validation
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+jobs:
+  validate_pull_request_standards:
+    runs-on: athena-runner
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Fetch latest commits  
+      run: git fetch origin ${{ github.event.pull_request.head.ref }}
+    - name: Validate Pull Request Standards
+      run: |
+        PR_NUMBER=$(echo ${{ github.event.pull_request.number }})
+        PR_TITLE=$(echo ${{ github.event.pull_request.title }})
+        PR_BODY=$(printf '%s' "${{ github.event.pull_request.body }}")
+        PR_HEAD_REF=$(echo ${{ github.event.pull_request.head.ref }})
+        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha }})
+        JIRA_TICKET_REGEX="([A-Z][A-Z0-9_]{1,10})+-[0-9]*"
+        COMMENT=""
+        CHECKS_PASSED=true
+
+        # Check if the JIRA ticket number is included in the PR title.
+        if [[ $PR_TITLE =~ $JIRA_TICKET_REGEX ]]; then
+          COMMENT+="&#x2705; JIRA ticket number is included in the PR title.\n"
+        else
+          COMMENT+="&#x274C; **JIRA ticket number is not included in the PR title.**\n"
+          CHECKS_PASSED=false
+        fi
+
+        # Check if the JIRA ticket number is included in the commit message.
+        if [[ $COMMIT_MESSAGE =~ $JIRA_TICKET_REGEX ]]; then
+          COMMENT+="&#x2705; JIRA ticket number is included in the commit message.\n"
+        else
+          COMMENT+="&#x274C; **JIRA ticket number is not included in the commit message.**\n"
+          CHECKS_PASSED=false
+        fi
+
+        # Check if the JIRA ticket number is included in the branch name.
+        if [[ $PR_HEAD_REF =~ $JIRA_TICKET_REGEX ]]; then
+          COMMENT+="&#x2705; JIRA ticket number is included in the branch name.\n"
+        else
+          COMMENT+="&#x274C; **JIRA ticket number is not included in the branch name.**\n"
+          CHECKS_PASSED=false
+        fi
+
+        # Check if the PR title and description explain what has changed and why.
+        if [[ -z $PR_TITLE || -z $PR_BODY ]]; then
+          COMMENT+="&#x274C; **The PR title or description is empty.**\n"
+          CHECKS_PASSED=false
+        else
+          COMMENT+="&#x2705; The PR title and description is not empty.\n"
+        fi
+
+        if $CHECKS_PASSED; then
+          COMMENT+="\n &#x2705; All checklist items have been validated.\n"
+        else
+          COMMENT+="\n &#x1F6AB; Validation Failed!\n"
+        fi
+        echo -e $COMMENT > comment.txt        
+        echo "ATHENA_PR_VALIDATION_PASSED=$CHECKS_PASSED" >> $GITHUB_ENV
+    - name: Put Logs
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{secrets.token}}
+        script: |
+          const fs = require('fs');
+          const comment = fs.readFileSync('comment.txt', 'utf8');
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    - name: Check Status
+      run: |
+        if [ "${{ env.ATHENA_PR_VALIDATION_PASSED }}" != "true" ]; then
+          exit 1
+        fi

@@ -1,0 +1,49 @@
+name: Create Releases
+
+on:
+  workflow_dispatch:
+
+jobs:
+  changelog:
+    runs-on: athena-runner
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ensure full git history is available
+
+      - name: Generate Changelog
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v5
+        with:
+          github-token: ${{ secrets.github_token }}
+          output-file: "false"
+
+      - name: Create Release Branch
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b release/${{ steps.changelog.outputs.tag }}
+          git push origin release/${{ steps.changelog.outputs.tag }}
+
+      - name: Create Pull Request to Main
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.github_token }}
+          branch: release/${{ steps.changelog.outputs.tag }}
+          base: main
+          title: "Release ${{ steps.changelog.outputs.tag }}"
+          body: "This PR merges the latest release into `main`."
+          draft: false
+
+      - name: Create GitHub Release
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
