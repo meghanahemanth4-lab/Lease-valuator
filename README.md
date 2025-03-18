@@ -1,26 +1,16 @@
-# [Repository Title]()
+# README #
 
-> Repository Description
->
-> Kindly adhere to these guidelines when creating a repository:
+### How do I get set up? ###
 
-   - Use the base-repo-template repository as the template for creating other repositories
+* Install jdk 17 https://www.oracle.com/java/technologies/downloads/#jdk17-windows
+* Set JAVA_HOME to the jdk folder
+* Install docker https://docs.docker.com/desktop/install/windows-install/
 
-## **1.** Create Commits
-
-### How to create commits
-
-> create commits either by using CLI/Github.<br>
-> <br>
-    - **NAME:** *JIRA-123: commit message<br>
-> Note: Your commit message must not be less than 40 characters
-## **3.** FAQ
+### How to run the app ###
+* ./gradlew clean build
+* docker-compose up --build
+* Your application along with a database should be up and running in the port specified in application.yaml
 
 
-### 2.1 How to create feature branch
-
-> Create a new branch either using CLI/GitHub.<br>
-> <br>
-    - **NAME:** JIRA ticket Number --> *JIRA-123* <br>
-    - **FROM:** *develop* branch <br>
-> <br>
+### API's ###
+* You can access the swagger on: http://localhost:8080/swagger-ui/index.html

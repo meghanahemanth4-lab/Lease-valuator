@@ -1,0 +1,148 @@
+package com.spinteg.lv.service;
+
+import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
+import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
+import com.spinteg.lv.dto.CreateContractTypeDTO;
+import com.spinteg.lv.dto.UpdateContractTypeDTO;
+import com.spinteg.lv.entity.ContractType;
+import com.spinteg.lv.entity.enums.Deployment;
+import com.spinteg.lv.entity.enums.Frequency;
+import com.spinteg.lv.entity.enums.VehicleStatus;
+import com.spinteg.lv.entity.enums.VehicleType;
+import com.spinteg.lv.repository.ContractTypeRepository;
+import com.spinteg.lv.repository.InterestRateRepository;
+import lombok.AllArgsConstructor;
+import lombok.val;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.List;
+
+@Service
+@AllArgsConstructor
+public class ContractTypeService {
+
+    private final ContractTypeRepository contractTypeRepository;
+    private final InterestRateRepository interestRateRepository;
+
+    public ContractType getContractTypeById(String contractTypeId) {
+        return contractTypeRepository.findById(contractTypeId)
+                .orElseThrow(
+                        () -> new DataNotFoundException("Contract Type not found with ID: " + contractTypeId));
+    }
+
+    public List<String> getAllContractTypeIds() {
+        return contractTypeRepository.findAllContractTypeIds();
+    }
+
+    public ContractType saveContractType(CreateContractTypeDTO createContractTypeDTO) {
+        ContractType contractType = new ContractType();
+        try {
+            Frequency.valueOf(createContractTypeDTO.getPaymentFrequency().name());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new CustomDataMissingException(
+                    "Invalid Payment Frequency: " + createContractTypeDTO.getPaymentFrequency());
+        }
+        contractType.setBaseRent(null);
+        contractType.setInsuranceAmount(null);
+        contractType.setMaintenanceAmount(null);
+        contractType.setVehicleStatus(VehicleStatus.NEW);
+        contractType.setContractTypeId(createContractTypeDTO.getContractName());
+        contractType.setContractCode(createContractTypeDTO.getContractCode());
+        contractType.setTenure(Integer.parseInt(
+                isNotZero(
+                        isNumeric(createContractTypeDTO.getTenure(), "Tenure"), "Tenure")));
+        contractType.setInterestRate(interestRateRepository.findById(1L)
+                .orElseThrow(() -> new CustomDataMissingException("Interest rate not found")).getRate());
+
+        contractType.setPaymentFrequency(createContractTypeDTO.getPaymentFrequency());
+        contractType.setTypeOfVehicle(fromString(createContractTypeDTO.getTypeOfVehicle()));
+        contractType.setDeployment(Deployment.LEASING);
+
+        contractType.setDownpayment(Float.parseFloat(isNumeric(createContractTypeDTO.getDownPayment(), "Downpayment")));
+        contractType.setInstallment(Float.parseFloat(
+                isNotZero(isNumeric(createContractTypeDTO.getInstallment(), "Installment"), "Installment")));
+        contractTypeRepository.save(contractType);
+        return contractType;
+    }
+
+    public List<ContractType> getALlContractTypes() {
+        val allContractTypes = contractTypeRepository.findAll();
+        if (allContractTypes.isEmpty())
+            return List.of();
+        return allContractTypes;
+    }
+
+    public void updateInterestRateForAllContracts(float newRate) {
+        List<ContractType> allContracts = contractTypeRepository.findAll();
+        for (ContractType contract : allContracts) {
+            contract.setInterestRate(newRate);
+            contractTypeRepository.save(contract);
+        }
+    }
+
+    public static VehicleType fromString(String value) {
+        try {
+            return VehicleType.valueOf(value.replace(' ', '_').replace("-", "_").toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new CustomDataMissingException("Invalid vehicle type: " + value);
+        }
+    }
+
+    public List<ContractType> getContractTypesWithNullBaseRent() {
+        return contractTypeRepository.findByBaseRentIsNull();
+    }
+
+    public ResponseEntity<?> updateContractTypeFields(String contractTypeId, UpdateContractTypeDTO objContractType) {
+        ContractType contractType = contractTypeRepository.findById(contractTypeId)
+                .orElseThrow(() -> new DataNotFoundException("ContractType not found"));
+
+        // Checking validation for the fields
+        upadteContractTypeFieldsValidation(contractType, objContractType);
+
+        return ResponseEntity.ok().body(contractTypeRepository.save(contractType));
+    }
+
+    public void upadteContractTypeFieldsValidation(ContractType contractType, UpdateContractTypeDTO objContractType) {
+
+        if (objContractType.getBaseRent() == null || objContractType.getBaseRent().trim() == "")
+            throw new CustomDataMissingException("Base Rent cannot be null or empty");
+
+        if (objContractType.getInsuranceAmount() == null || objContractType.getInsuranceAmount().trim() == "")
+            throw new CustomDataMissingException("Insurence Amount cannot be null or empty");
+
+        if (objContractType.getMaintenanceAmount() == null || objContractType.getMaintenanceAmount().trim() == "")
+            throw new CustomDataMissingException("Maintenance Amount cannot be null or empty");
+
+        contractType.setBaseRent(Integer.valueOf(objContractType.getBaseRent().trim()));
+
+        contractType.setInsuranceAmount(Float.valueOf(objContractType.getInsuranceAmount().trim()));
+
+        contractType.setMaintenanceAmount(Float.valueOf(objContractType.getMaintenanceAmount().trim()));
+
+        if (contractType.getInstallment() != (contractType.getInsuranceAmount() + contractType.getMaintenanceAmount()
+                + contractType.getBaseRent()))
+            throw new CustomDataMissingException(
+                    "Installment Amount is not equal to sum of Base Rent, Insurance Amount and Maintenance Amount");
+
+    }
+
+    public static String isNumeric(String str, String field) {
+        try {
+            Double.parseDouble(str);
+            return str;
+        } catch (NumberFormatException e) {
+            throw new CustomDataMissingException(field + " should be a number");
+        }
+    }
+
+    public static String isNotZero(String str, String field) {
+        if (Double.parseDouble(str) == 0)
+            throw new CustomDataMissingException(field + " should not be zero");
+        return str;
+    }
+}
