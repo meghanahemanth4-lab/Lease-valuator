@@ -87,49 +87,45 @@ jobs:
           name: dependency-check-report
           path: ./dependency-check-report
 
-      # Step 11: Run Trivy Scan for Security Vulnerabilities
-      - name: Run Trivy File System Scan
+      # Run Trivy Scan
+      - name: Run Trivy Scan
         run: |
-          echo "Running Trivy scan..."
           trivy fs ./ --format json --output trivy-report.json
 
-      # Step 12: Install Trivy SonarQube Plugin
+        # Step 11: Install Trivy SonarQube Plugin
       - name: Install Trivy SonarQube Plugin
         run: |
-          echo "Installing Trivy SonarQube plugin..."
           trivy plugin install github.com/umax/trivy-plugin-sonarqube
 
-      # Step 13: List Installed Trivy Plugins
+      # Step 12: List Installed Trivy Plugins
       - name: List Installed Trivy Plugins
         run: |
-          echo "Listing installed Trivy plugins..."
           trivy plugin list
 
-      # Step 14: Run Trivy Scan Again for SonarQube Analysis
-      - name: Run Trivy Scan for SonarQube
+      # Step 13: Run Trivy Scan
+      - name: Run Trivy Scan
         run: |
-          echo "Running Trivy scan for SonarQube..."
           trivy fs --format=json --output=trivy-report.json ./ 
 
-      # Step 15: Convert Trivy JSON Report for SonarQube
-      - name: Convert Trivy Report for SonarQube
+      # Step 14: Convert Trivy JSON Report for SonarQube
+      - name: Generate SonarQube Report from Trivy JSON
         run: |
-          echo "Converting Trivy report to SonarQube format..."
           trivy sonarqube trivy-report.json > sonar-report.json
 
-      # Step 16: Upload Trivy Report
-      - name: Upload Trivy Scan Report
+      # Step 15: Upload Trivy Report
+      - name: Upload Trivy Report
         uses: actions/upload-artifact@v4
         with:
           name: trivy-report
           path: trivy-report.json
 
-      # Step 17: Upload SonarQube Report
-      - name: Upload Converted SonarQube Report
+      # Step 16: Upload SonarQube Report
+      - name: Upload SonarQube Report
         uses: actions/upload-artifact@v4
         with:
           name: sonar-report
           path: sonar-report.json
+
 
       # Step 18: Run SonarQube Analysis
       - name: Run SonarQube Analysis
