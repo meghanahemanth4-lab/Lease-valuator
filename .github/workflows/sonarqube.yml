@@ -111,6 +111,7 @@ jobs:
       - name: Generate SonarQube Report from Trivy JSON
         run: |
           trivy sonarqube trivy-report.json > sonar-report.json
+          mv sonar-report.json /opt/actions-runner/_work/sap-lease-valuator-service/sap-lease-valuator-service/sonarqube.json
 
       # Step 15: Upload Trivy Report
       - name: Upload Trivy Report
