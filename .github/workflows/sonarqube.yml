@@ -1,13 +1,9 @@
-name: Sonarqube Scan
+name: SonarQube and Security Scans
 
 on:
-  push:
+  pull_request:
     branches:
-      - '**'
-      - '!main'
-      - '!master'
-      - '!develop'
-      - '!prod'
+      - develop
 
 jobs:
   build:
@@ -15,34 +11,120 @@ jobs:
     runs-on: sonarqube-runner-agent
 
     steps:
-      - name: Checkout code
+      # Step 1: Checkout Code
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      # Step 2: Set Up Java
+      - name: Set Up Java Environment
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Verify Java Version
+      # Step 3: Verify Java Version
+      - name: Verify Java Installation
         run: |
           echo "Checking Java version..."
           java -version
 
-      - name: Setup Gradle
+      # Step 4: Setup Gradle
+      - name: Set Up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Grant execute permission to gradlew
+      # Step 5: Grant Execution Permission for Gradle Wrapper
+      - name: Grant Execute Permission for Gradle Wrapper
         run: |
           echo "Granting execute permission to gradlew..."
           chmod +x ./gradlew
 
-      - name: Verify Gradle Version
+      # Step 6: Verify Gradle Version
+      - name: Verify Gradle Installation
         run: |
           echo "Checking Gradle version..."
           ./gradlew --version
 
-      - name: Build with Gradle
+      # Step 7: Build Project with Gradle
+      - name: Build Project with Gradle
         run: |
           echo "Starting Gradle build..."
           ./gradlew clean build
+
+      # Step 8: Install OWASP Dependency-Check CLI
+      - name: Install OWASP Dependency-Check CLI
+        run: |
+          echo "Downloading OWASP Dependency-Check..."
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
+          unzip dependency-check-11.1.0-release.zip
+          cd dependency-check/bin/
+          chmod +x dependency-check.sh
+
+      # Step 9: Run OWASP Dependency-Check
+      - name: Run OWASP Dependency-Check
+        run: |
+          echo "Running OWASP Dependency-Check..."
+          dependency-check/bin/dependency-check.sh \
+            --scan ./ \
+            --format ALL \
+            --project "Energy-Service" \
+            --out . \
+            --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+            --nvdApiDelay 5000
+
+      # Step 10: Upload OWASP Dependency-Check Report
+      - name: Upload OWASP Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report
+
+      # Step 11: Run Trivy Scan for Security Vulnerabilities
+      - name: Run Trivy File System Scan
+        run: |
+          echo "Running Trivy scan..."
+          trivy fs ./ --format json --output trivy-report.json
+
+      # Step 12: Install Trivy SonarQube Plugin
+      - name: Install Trivy SonarQube Plugin
+        run: |
+          echo "Installing Trivy SonarQube plugin..."
+          trivy plugin install github.com/umax/trivy-plugin-sonarqube
+
+      # Step 13: List Installed Trivy Plugins
+      - name: List Installed Trivy Plugins
+        run: |
+          echo "Listing installed Trivy plugins..."
+          trivy plugin list
+
+      # Step 14: Run Trivy Scan Again for SonarQube Analysis
+      - name: Run Trivy Scan for SonarQube
+        run: |
+          echo "Running Trivy scan for SonarQube..."
+          trivy fs --format=json --output=trivy-report.json ./ 
+
+      # Step 15: Convert Trivy JSON Report for SonarQube
+      - name: Convert Trivy Report for SonarQube
+        run: |
+          echo "Converting Trivy report to SonarQube format..."
+          trivy sonarqube trivy-report.json > sonar-report.json
+
+      # Step 16: Upload Trivy Report
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
+
+      # Step 17: Upload SonarQube Report
+      - name: Upload Converted SonarQube Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-report
+          path: sonar-report.json
+
+      # Step 18: Run SonarQube Analysis
+      - name: Run SonarQube Analysis
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarqube.spiroiothub.com
