@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.math.BigDecimal;
+import java.rmi.dgc.Lease;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +55,7 @@ public class PaymentService {
                         return ResponseEntity.status(400).body("Payment already paid");
                     }
 
-                    if (!checkBaseRentareEqual(paymentApiDTO.getPaymentAmount().toString(),
+                    if (!checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
                             entry.getBaseRent().toString()) == true)
                         return ResponseEntity.status(400).body("Payment amount does not match the base rent");
 
@@ -86,8 +88,52 @@ public class PaymentService {
         return !contractTypeRepository.findByContractTypeId(contractTypeId).isEmpty();
     }
 
-    private boolean checkBaseRentareEqual(String paymentAmount, String leaseBaseRent) {
+    private boolean checkAmountareEqual(String paymentAmount, String leaseRent) {
         String amount = DataValidation.isNotNegativeAndZero(paymentAmount, "Payment Amount");
-        return Double.valueOf(amount).equals((Double.valueOf(leaseBaseRent.trim())));
+        return Double.valueOf(amount).equals((Double.valueOf(leaseRent.trim())));
+    }
+
+    public ResponseEntity<?> updateDownPaymentStatusToPaid(PaymentApiDTO paymentApiDTO) {
+
+        LeaseContract leaseContract = leaseContractRepository
+                .findByCustomerIdAndContractTypeId(paymentApiDTO.getCustomerNumber(),
+                        paymentApiDTO.getContractTypeId());
+
+        // Check if the payment date is valid
+        DataValidation.isValidDate(paymentApiDTO.getDate().toString(), "Payment Date");
+
+        if (leaseContract != null) {
+
+            // Check if the downpayment is already paid
+            if (leaseContract.getDownpaymentReceived() != null) {
+                return ResponseEntity.status(400).body("Downpayment already paid");
+            }
+
+            // Check if the payment amount is valid
+            DataValidation.isNotNegativeAndZero(paymentApiDTO.getPaymentAmount().toString(), "Payment Amount");
+
+            // Check if the payment amount is equal to the downpayment
+            if (checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
+                    String.valueOf(leaseContract.getContractType().getDownpayment())) == false)
+                return ResponseEntity.status(400).body("Payment amount does not match the downpayment");
+
+            // Update the downpayment status
+            leaseContract.setDownpaymentReceived(BigDecimal.valueOf(paymentApiDTO.getPaymentAmount()));
+            leaseContract.setDownpaymentTransDate(paymentApiDTO.getDate());
+
+            LeaseContract contract = leaseContractRepository.save(leaseContract);
+            if (contract != null) {
+                return ResponseEntity.ok("Payment status updated successfully");
+            }
+
+        } else {
+            if (!contractExists(paymentApiDTO.getCustomerNumber())) {
+                throw new DataNotFoundException("Customer not found");
+            }
+            if (!contractTypeExists(paymentApiDTO.getContractTypeId())) {
+                throw new DataNotFoundException("Contract Type not found");
+            }
+        }
+        return ResponseEntity.status(500).body("Downpayment status update failed");
     }
 }

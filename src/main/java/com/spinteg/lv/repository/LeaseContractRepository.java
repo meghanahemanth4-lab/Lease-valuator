@@ -174,4 +174,21 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
                         AND lc.status IN ('ACTIVE', 'DEFAULTED')
                         """, nativeQuery = true)
         void updatePendingPaymentsToDefaulted();
+
+        @Query(value = """
+                        SELECT SUM(lc.downpayment_received)
+                        FROM contract.lease_contract lc
+                        JOIN contract.contract_type ct
+                        ON lc.contract_type_id = ct.contract_type_id
+                        WHERE ct.deployment = CAST(:deployment AS contract.deployment)
+                        AND ct.type_of_vehicle = CAST(:vehicleType AS contract.vehicle_type)
+                        AND EXTRACT(MONTH FROM lc.downpayment_trans_date) = :month
+                        AND EXTRACT(YEAR FROM lc.downpayment_trans_date) = :year
+                        """, nativeQuery = true)
+        Float sumofDownpaymentReceivedByDeploymentAndVsehicleTypeAndMonthAndYear(
+                        String deployment,
+                        String vehicleType,
+                        int month,
+                        int year);
+
 }

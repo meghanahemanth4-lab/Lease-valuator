@@ -13,8 +13,12 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @PostMapping("/update-status")
+    @PostMapping("/rent")
     public ResponseEntity<?> updatePaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
         return paymentService.updatePaymentStatusToPaid(paymentApiDTO);
+    }
+    @PostMapping("/downpayment")
+    public ResponseEntity<?> updateDownPaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
+        return paymentService.updateDownPaymentStatusToPaid(paymentApiDTO);
     }
 }
