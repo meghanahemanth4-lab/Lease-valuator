@@ -31,7 +31,7 @@ public class ContractTypeController {
     @GetMapping("/{contractTypeId}")
     public ResponseEntity<ContractType> getContractTypeById(@PathVariable("contractTypeId") String contractTypeId) {
         ContractType contractType = contractTypeService.getContractTypeById(contractTypeId);
-        
+
         return ResponseEntity.ok(contractType);
     }
 
@@ -42,8 +42,8 @@ public class ContractTypeController {
     }
 
     @PostMapping("/createContractType")
-    public ResponseEntity<ContractType> createLeaseContract(@RequestBody CreateContractTypeDTO createContractTypeDTO) {
-        return ResponseEntity.ok(contractTypeService.saveContractType(createContractTypeDTO));
+    public ResponseEntity<?> createLeaseContract(@RequestBody CreateContractTypeDTO createContractTypeDTO) {
+        return contractTypeService.saveContractType(createContractTypeDTO);
     }
 
     @GetMapping("/nullBaseRent")
@@ -54,6 +54,6 @@ public class ContractTypeController {
     @PostMapping("/updateContractTypeFields/{contractTypeId}")
     public ResponseEntity<?> updateContractTypeFields(@RequestBody UpdateContractTypeDTO contractType,
             @PathVariable("contractTypeId") String contractTypeId) {
-        return ResponseEntity.ok(contractTypeService.updateContractTypeFields(contractTypeId, contractType));
+        return contractTypeService.updateContractTypeFields(contractTypeId, contractType);
     }
 }

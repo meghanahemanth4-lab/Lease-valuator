@@ -1,5 +1,6 @@
 package com.spinteg.lv.service;
 
+import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
 import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
 import com.spinteg.lv.entity.InterestRate;
 import com.spinteg.lv.repository.InterestRateRepository;
@@ -17,10 +18,22 @@ public class InterestRateService {
                 .orElseThrow(() -> new DataNotFoundException("Interest rate not found"));
     }
 
-    public InterestRate setInterestRate(float rate) {
+    public InterestRate setInterestRate(String rate) {
+        checkInterestRate(rate);
         InterestRate interestRate = new InterestRate();
         interestRate.setId(1L);
-        interestRate.setRate(rate);
+        interestRate.setRate(Float.parseFloat(rate));
         return interestRateRepository.save(interestRate);
+    }
+
+    public void checkInterestRate(String rate) {
+        try {
+            Float.parseFloat(rate);
+        } catch (NumberFormatException e) {
+            throw new CustomDataMissingException("Invalid interest rate: " + rate);
+        }
+        if (Float.parseFloat(rate) < 0 || Float.parseFloat(rate) > 100) {
+            throw new CustomDataMissingException("Interest rate should be between 0 and 100");
+        }
     }
 }

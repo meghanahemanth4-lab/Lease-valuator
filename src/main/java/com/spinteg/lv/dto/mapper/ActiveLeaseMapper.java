@@ -36,6 +36,8 @@ public class ActiveLeaseMapper {
                 dto.setDeployment(leaseContract.getContractType().getDeployment());
                 dto.setVehicleStatus(leaseContract.getVehicleStatus());
                 dto.setTenure(leaseContract.getContractType().getTenure());
+                dto.setInstallment(Double.valueOf(leaseContract.getContractType().getInstallment()));
+                dto.setNoOfTimesRedeployed(leaseContract.getNoOfTimesRedeployed());
 
                 val leaseContractWithAmortizationDTO = LeaseContractMapper
                                 .toLeaseContractWithAmortizationDTO(leaseContract);

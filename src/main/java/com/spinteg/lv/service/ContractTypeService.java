@@ -2,6 +2,8 @@ package com.spinteg.lv.service;
 
 import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
 import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
+import com.spinteg.lv.ExceptionHandling.DataValidation;
+import com.spinteg.lv.ExceptionHandling.ResponseHandler;
 import com.spinteg.lv.dto.CreateContractTypeDTO;
 import com.spinteg.lv.dto.UpdateContractTypeDTO;
 import com.spinteg.lv.entity.ContractType;
@@ -16,10 +18,7 @@ import lombok.val;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.util.List;
 
 @Service
@@ -39,7 +38,7 @@ public class ContractTypeService {
         return contractTypeRepository.findAllContractTypeIds();
     }
 
-    public ContractType saveContractType(CreateContractTypeDTO createContractTypeDTO) {
+    public ResponseEntity<?> saveContractType(CreateContractTypeDTO createContractTypeDTO) {
         ContractType contractType = new ContractType();
         try {
             Frequency.valueOf(createContractTypeDTO.getPaymentFrequency().name());
@@ -54,8 +53,8 @@ public class ContractTypeService {
         contractType.setContractTypeId(createContractTypeDTO.getContractName());
         contractType.setContractCode(createContractTypeDTO.getContractCode());
         contractType.setTenure(Integer.parseInt(
-                isNotZero(
-                        isNumeric(createContractTypeDTO.getTenure(), "Tenure"), "Tenure")));
+                DataValidation.isNotZero(
+                        DataValidation.isInteger(createContractTypeDTO.getTenure(), "Tenure"), "Tenure")));
         contractType.setInterestRate(interestRateRepository.findById(1L)
                 .orElseThrow(() -> new CustomDataMissingException("Interest rate not found")).getRate());
 
@@ -63,11 +62,14 @@ public class ContractTypeService {
         contractType.setTypeOfVehicle(fromString(createContractTypeDTO.getTypeOfVehicle()));
         contractType.setDeployment(Deployment.LEASING);
 
-        contractType.setDownpayment(Float.parseFloat(isNumeric(createContractTypeDTO.getDownPayment(), "Downpayment")));
+        contractType.setDownpayment(
+                Float.parseFloat(DataValidation.isNumeric(createContractTypeDTO.getDownPayment(), "Downpayment")));
         contractType.setInstallment(Float.parseFloat(
-                isNotZero(isNumeric(createContractTypeDTO.getInstallment(), "Installment"), "Installment")));
+                DataValidation.isNotZero(
+                        DataValidation.isNumeric(createContractTypeDTO.getInstallment(), "Installment"),
+                        "Installment")));
         contractTypeRepository.save(contractType);
-        return contractType;
+        return ResponseHandler.handleResponseEntity("ContractType Created", contractType);
     }
 
     public List<ContractType> getALlContractTypes() {
@@ -103,8 +105,7 @@ public class ContractTypeService {
 
         // Checking validation for the fields
         upadteContractTypeFieldsValidation(contractType, objContractType);
-
-        return ResponseEntity.ok().body(contractTypeRepository.save(contractType));
+        return ResponseHandler.handleResponseEntity("ContractType Updated", contractTypeRepository.save(contractType));
     }
 
     public void upadteContractTypeFieldsValidation(ContractType contractType, UpdateContractTypeDTO objContractType) {
@@ -118,11 +119,23 @@ public class ContractTypeService {
         if (objContractType.getMaintenanceAmount() == null || objContractType.getMaintenanceAmount().trim() == "")
             throw new CustomDataMissingException("Maintenance Amount cannot be null or empty");
 
-        contractType.setBaseRent(Integer.valueOf(objContractType.getBaseRent().trim()));
+        // if (Integer.valueOf(objContractType.getBaseRent().trim()) <= 0)
+        // throw new CustomDataMissingException("Base Rent should be greater than 0");
 
-        contractType.setInsuranceAmount(Float.valueOf(objContractType.getInsuranceAmount().trim()));
+        contractType.setBaseRent(
+                Integer.valueOf(
+                        DataValidation.isInteger(
+                                DataValidation.isNotZero(
+                                        objContractType.getBaseRent(), "Base Rent"),
+                                "Base Rent")));
 
-        contractType.setMaintenanceAmount(Float.valueOf(objContractType.getMaintenanceAmount().trim()));
+        contractType.setInsuranceAmount(
+                Float.valueOf(
+                        DataValidation.isInteger(objContractType.getMaintenanceAmount(), "Maintenance Amount")));
+
+        contractType.setMaintenanceAmount(
+                Float.valueOf(
+                        DataValidation.isInteger(objContractType.getInsuranceAmount(), "Insurance Amount")));
 
         if (contractType.getInstallment() != (contractType.getInsuranceAmount() + contractType.getMaintenanceAmount()
                 + contractType.getBaseRent()))
@@ -131,18 +144,4 @@ public class ContractTypeService {
 
     }
 
-    public static String isNumeric(String str, String field) {
-        try {
-            Double.parseDouble(str);
-            return str;
-        } catch (NumberFormatException e) {
-            throw new CustomDataMissingException(field + " should be a number");
-        }
-    }
-
-    public static String isNotZero(String str, String field) {
-        if (Double.parseDouble(str) == 0)
-            throw new CustomDataMissingException(field + " should not be zero");
-        return str;
-    }
 }

@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
 import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
+import com.spinteg.lv.ExceptionHandling.ResponseHandler;
 import com.spinteg.lv.dto.CustomerDTO;
 import com.spinteg.lv.dto.CustomerInputDTO;
 import com.spinteg.lv.dto.mapper.LeaseContractMapper;
+import com.spinteg.lv.entity.ContractType;
 import com.spinteg.lv.entity.Customer;
 import com.spinteg.lv.entity.CustomerContractDraft;
 import com.spinteg.lv.entity.LeaseContract;
+import com.spinteg.lv.repository.ContractTypeRepository;
 import com.spinteg.lv.repository.CustomerRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
 
@@ -30,17 +33,27 @@ public class CustomerService {
     private final CustomerRepository repository;
     private final LeaseContractRepository leaseContractRepository;
     private final CustomerRepository customerRepository;
+    private final ContractTypeRepository contractTypeRepository;
+    private final Holidayservice holidayservice;
 
     public ResponseEntity<?> createNewCustomer(@RequestBody CustomerInputDTO dto) {
 
         Customer customer = customerRepository.findByCustomerNumber(dto.getCustomerNumber());
+        
+        // Check if the customer number already exists
         if (customer != null) {
             throw new CustomDataMissingException(
                     "Customer Number already exists. Please enter a different Customer Number");
         }
-
+        // Check if the contract type exists
+        contractTypeRepository.findById(dto.getContractTypeId())
+                .orElseThrow(
+                        () -> new DataNotFoundException("Contract Type not found with ID: " + dto.getContractTypeId()));
+        
+        // Check if the start date and end date are valid
+        holidayservice.getHolidaysDatesForCountry(dto.getCountry());
+        
         Customer draft = new Customer();
-
         draft.setCustomerNumber(dto.getCustomerNumber());
         draft.setCustomerName(dto.getCustomerName());
         draft.setCustomerContractDraft(CustomerContractDraft.builder()
@@ -54,7 +67,7 @@ public class CustomerService {
         draft.setPhoneNumber(dto.getPhoneNumber());
         draft.setLeaseContract(false); // default value
         draft = repository.save(draft);
-        return ResponseEntity.status(200).body(draft);
+        return ResponseHandler.handleResponseEntity("new Customer data created Successfully", draft);
     }
 
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {

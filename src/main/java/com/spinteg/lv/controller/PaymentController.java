@@ -14,7 +14,7 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/update-status")
-    public ResponseEntity<String> updatePaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
+    public ResponseEntity<?> updatePaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
         return paymentService.updatePaymentStatusToPaid(paymentApiDTO);
     }
 }
