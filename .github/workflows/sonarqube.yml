@@ -1,9 +1,18 @@
 name: SonarQube and Security Scans
 
+#on:
+#  pull_request:
+#    branches:
+#      - develop
+
 on:
-  pull_request:
+  push:
     branches:
-      - develop
+      - '**'                  # Run on all branches
+      - '!main'               # Exclude main
+      - '!master'             # Exclude master
+      - '!develop'            # Exclude develop
+      - '!prod'               # Exclude prod
 
 jobs:
   build:
