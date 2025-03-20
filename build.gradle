@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.2'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'jacoco' // Added JaCoCo plugin
 }
 
 group = 'com.spinteg'
@@ -42,6 +43,20 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport // Ensure JaCoCo runs after tests
+}
+
+jacoco {
+	toolVersion = "0.8.8" // Use the latest JaCoCo version
+}
+
+jacocoTestReport {
+	dependsOn test // Ensure tests run before generating the report
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
 }
 
 sourceSets {
