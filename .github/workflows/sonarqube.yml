@@ -57,7 +57,7 @@ jobs:
       - name: Build Project with Gradle
         run: |
           echo "Starting Gradle build..."
-          ./gradlew clean build
+          ./gradlew clean build test jacocoTestReport check
 
       # Step 8: Install OWASP Dependency-Check CLI
       - name: Install OWASP Dependency-Check CLI
