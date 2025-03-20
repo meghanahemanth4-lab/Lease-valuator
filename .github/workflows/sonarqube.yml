@@ -1,0 +1,129 @@
+name: Sonarqube Scan
+
+on:
+  push:
+    branches:
+      - '**'                  # Run on all branches
+      - '!main'               # Exclude main
+      - '!master'             # Exclude master
+      - '!develop'            # Exclude develop
+      - '!prod'               # Exclude prod
+#on:
+#  pull_request:
+#    branches:
+#      - develop
+
+jobs:
+  build:
+    name: Trivy Scan and SonarQube
+    runs-on: sonarqube-runner-agent
+
+    steps:
+      # Step 1: Checkout Code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 4: Set Up Java
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+
+
+      # Step 3: Cache Maven Dependencies
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+
+      # Step 6: Build and Test
+      - name: Test
+        run: mvn test --settings ~/.m2/settings.xml
+          #continue-on-error: true
+
+        # Step 7: Install OWASP Dependency-Check CLI
+      - name: Install OWASP Dependency-Check
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
+          unzip dependency-check-11.1.0-release.zip
+          cd dependency-check/bin/
+          chmod +x dependency-check.sh
+
+
+
+        # Step 8: Run Dependency-Check
+      - name: Run Dependency-Check
+        run: |
+          dependency-check/bin/dependency-check.sh \
+            --scan ./ \
+            --format ALL \
+            --project "Energy-Service" \
+            --out .  \
+            --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+            --nvdApiDelay 5000
+
+
+
+        # Step 9: Upload Dependency-Check Report
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report
+
+      # Run Trivy Scan
+      - name: Run Trivy Scan
+        run: |
+          trivy fs ./ --format json --output trivy-report.json
+
+        # Step 11: Install Trivy SonarQube Plugin
+      - name: Install Trivy SonarQube Plugin
+        run: |
+          trivy plugin install github.com/umax/trivy-plugin-sonarqube
+
+      # Step 12: List Installed Trivy Plugins
+      - name: List Installed Trivy Plugins
+        run: |
+          trivy plugin list
+
+      # Step 13: Run Trivy Scan
+      - name: Run Trivy Scan
+        run: |
+          trivy fs --format=json --output=trivy-report.json ./ 
+
+      # Step 14: Convert Trivy JSON Report for SonarQube
+      - name: Generate SonarQube Report from Trivy JSON
+        run: |
+          trivy sonarqube trivy-report.json > sonar-report.json
+
+      # Step 15: Upload Trivy Report
+      - name: Upload Trivy Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
+
+      # Step 16: Upload SonarQube Report
+      - name: Upload SonarQube Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-report
+          path: sonar-report.json
+
+      # Step 17: Run SonarQube Analysis
+      - name: Official SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarqube.spiroiothub.com
