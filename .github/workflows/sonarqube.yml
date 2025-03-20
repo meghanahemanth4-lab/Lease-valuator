@@ -63,8 +63,8 @@ jobs:
       - name: Install OWASP Dependency-Check CLI
         run: |
           echo "Downloading OWASP Dependency-Check..."
-          wget https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
-          unzip dependency-check-11.1.0-release.zip
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip
+          unzip dependency-check-12.1.0-release.zip
           cd dependency-check/bin/
           chmod +x dependency-check.sh
 
