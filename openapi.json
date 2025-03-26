@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/customer": {
+      "post": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "createCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerContractDraftDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contract-types/contract-type-ids": {
+      "get": {
+        "tags": [
+          "contract-type-controller"
+        ],
+        "operationId": "getAllContractTypeIds",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contract-types/allContractTypes": {
+      "get": {
+        "tags": [
+          "contract-type-controller"
+        ],
+        "operationId": "getAllContractTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+  },
+  "components": {
+    "schemas": {
+      "ContractType": {
+        "type": "object",
+        "properties": {
+          "contractTypeId": {
+            "type": "string"
+          },
+          "tenure": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "interestRate": {
+            "type": "number",
+            "format": "float"
+          },
+          "installment": {
+            "type": "number",
+            "format": "float"
+          },
+          "paymentFrequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "MONTHLY",
+              "QUARTERLY"
+            ]
+          },
+          "deployment": {
+            "type": "string",
+            "enum": [
+              "LEASING",
+              "UPFRONT",
+              "DELIVERY",
+              "EXTERNAL_FINANCE",
+              "MBT",
+              "NON_MBT",
+              "EMPLOYEES"
+            ]
+          },
+          "typeOfVehicle": {
+            "type": "string",
+            "enum": [
+              "CHAP_CHAP",
+              "COMMANDO"
+            ]
+          },
+          "baseRent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maintenanceAmount": {
+            "type": "number",
+            "format": "float"
+          },
+          "insuranceAmount": {
+            "type": "number",
+            "format": "float"
+          },
+          "downpayment": {
+            "type": "number",
+            "format": "float"
+          },
+          "vehicleStatus": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "REFURBISHED"
+            ]
+          }
+        }
+      },
+      "CustomerDTO": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "contractTypeId": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

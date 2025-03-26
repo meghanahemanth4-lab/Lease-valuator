@@ -1,0 +1,170 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Athena API",
+        "description": "API documentation for Athena backend services",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://3.109.116.159/",
+            "description": "Athena API server"
+        }
+    ],
+    "paths": {
+        "/customer": {
+            "post": {
+                "tags": ["customer-controller"],
+                "operationId": "createCustomer",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustomerDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CustomerContractDraftDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/contract-types/allContractTypes": {
+            "get": {
+                "tags": ["contract-type-controller"],
+                "operationId": "getAllContractTypes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ContractType"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/payments/update-status": {
+            "post": {
+                "tags": ["payment-controller"],
+                "operationId": "updatePaymentStatus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentApiDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment status updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "404": {
+                        "description": "Lease contract not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CustomerDTO": {
+                "type": "object",
+                "properties": {
+                    "customerNumber": {
+                        "type": "string"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+            },
+            "CustomerContractDraftDTO": {
+                "type": "object",
+                "properties": {
+                    "contractDraftId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "contractTypeId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ContractType": {
+                "type": "object",
+                "properties": {
+                    "contractTypeId": {
+                        "type": "string"
+                    },
+                    "contractTypeName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PaymentApiDTO": {
+                "type": "object",
+                "properties": {
+                    "customerNumber": {
+                        "type": "string"
+                    },
+                    "contractTypeId": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "paymentAmount": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "transactionDate": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            }
+        }
+    }
+}

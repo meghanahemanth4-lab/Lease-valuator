@@ -1,0 +1,24 @@
+### Fetch a lease contract
+GET http://localhost:8080/contract/{{id}}
+
+
+### Fetch all contracts
+GET http://localhost:8080/contract
+
+### Create Lease Contract
+POST http://localhost:8080/contract
+Content-Type: application/json
+
+
+{
+  "lesseeName": "John Doe",
+  "lessorName": "ACME Corp",
+  "principalAmount": 10000.00,
+  "leaseAmount": 12000.00,
+  "interestRate": 5.5,
+  "leaseStartDate": "2024-01-01",
+  "leaseEndDate": "2025-01-01"
+}
+
+
+
