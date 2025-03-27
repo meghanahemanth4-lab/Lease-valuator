@@ -55,9 +55,14 @@ public class PaymentService {
                         return ResponseEntity.status(400).body("Payment already paid");
                     }
 
-                    if (!checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
-                            entry.getBaseRent().toString()) == true)
-                        return ResponseEntity.status(400).body("Payment amount does not match the base rent");
+                    if (entry.getLeasePaymentStatus().equals(LeasePaymentStatus.NO_RENT_DAY)
+                            || entry.getLeasePaymentStatus().equals(LeasePaymentStatus.NO_RENT_DAY_FUTURE)) {
+                        return ResponseEntity.status(400).body("No rent day");
+                    }
+
+                    if (checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
+                            entry.getInstallment().toString()) == false)
+                        return ResponseEntity.status(400).body("Payment amount does not match the installment rent");
 
                     entry.setLeasePaymentStatus(LeasePaymentStatus.PAID);
                     AmortizationEntry amortizationEntry = amortizationEntryRepository.save(entry);

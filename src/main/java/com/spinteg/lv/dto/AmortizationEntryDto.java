@@ -13,6 +13,7 @@ public class AmortizationEntryDto {
     private LocalDate date;
     private Long period;
     private Double installment;
+    private Double baseRent;
     private Double interestComponent;
     private Double principalComponent;
     private Double remainingAmount;
