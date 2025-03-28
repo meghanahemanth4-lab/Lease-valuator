@@ -1,5 +1,6 @@
 package com.spinteg.lv.controller;
 
+import com.spinteg.lv.dto.DownpaymentDTO;
 import com.spinteg.lv.dto.PaymentApiDTO;
 import com.spinteg.lv.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ public class PaymentController {
         return paymentService.updatePaymentStatusToPaid(paymentApiDTO);
     }
     @PostMapping("/downpayment")
-    public ResponseEntity<?> updateDownPaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
-        return paymentService.updateDownPaymentStatusToPaid(paymentApiDTO);
+    public ResponseEntity<?> updateDownPaymentStatus(@RequestBody DownpaymentDTO downpaymentDTO) {
+        return paymentService.updateDownPaymentStatusToPaid(downpaymentDTO);
     }
 }

@@ -160,8 +160,7 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
                         AND ae.lease_payment_status = 'NO_RENT_DAY_FUTURE'
                         AND lc.status IN ('ACTIVE', 'DEFAULTED')
                         """, nativeQuery = true)
-        void updateAmortizationEntriesForToday();
-
+        void updateAmortizationEntriesForToday(); 
         @Modifying
         @Transactional
         @Query(value = """

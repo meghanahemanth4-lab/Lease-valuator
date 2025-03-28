@@ -3,6 +3,7 @@ package com.spinteg.lv.service;
 import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
 import com.spinteg.lv.ExceptionHandling.DataValidation;
 import com.spinteg.lv.controller.ContractTypeController;
+import com.spinteg.lv.dto.DownpaymentDTO;
 import com.spinteg.lv.dto.PaymentApiDTO;
 import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.LeaseContract;
@@ -98,14 +99,14 @@ public class PaymentService {
         return Double.valueOf(amount).equals((Double.valueOf(leaseRent.trim())));
     }
 
-    public ResponseEntity<?> updateDownPaymentStatusToPaid(PaymentApiDTO paymentApiDTO) {
+    public ResponseEntity<?> updateDownPaymentStatusToPaid( DownpaymentDTO downpaymentDTO) {
 
         LeaseContract leaseContract = leaseContractRepository
-                .findByCustomerIdAndContractTypeId(paymentApiDTO.getCustomerNumber(),
-                        paymentApiDTO.getContractTypeId());
+                .findByCustomerIdAndContractTypeId(downpaymentDTO.getCustomerNumber(),
+                        downpaymentDTO.getContractTypeId());
 
         // Check if the payment date is valid
-        DataValidation.isValidDate(paymentApiDTO.getDate().toString(), "Payment Date");
+        DataValidation.isValidDate(downpaymentDTO.getTransactionDate().toString(), "Payment Date");
 
         if (leaseContract != null) {
 
@@ -115,16 +116,16 @@ public class PaymentService {
             }
 
             // Check if the payment amount is valid
-            DataValidation.isNotNegativeAndZero(paymentApiDTO.getPaymentAmount().toString(), "Payment Amount");
+            DataValidation.isNotNegativeAndZero(downpaymentDTO.getPaymentAmount().toString(), "Payment Amount");
 
             // Check if the payment amount is equal to the downpayment
-            if (checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
+            if (checkAmountareEqual(downpaymentDTO.getPaymentAmount().toString(),
                     String.valueOf(leaseContract.getContractType().getDownpayment())) == false)
                 return ResponseEntity.status(400).body("Payment amount does not match the downpayment");
 
             // Update the downpayment status
-            leaseContract.setDownpaymentReceived(BigDecimal.valueOf(paymentApiDTO.getPaymentAmount()));
-            leaseContract.setDownpaymentTransDate(paymentApiDTO.getDate());
+            leaseContract.setDownpaymentReceived(BigDecimal.valueOf(downpaymentDTO.getPaymentAmount()));
+            leaseContract.setDownpaymentTransDate(downpaymentDTO.getTransactionDate());
 
             LeaseContract contract = leaseContractRepository.save(leaseContract);
             if (contract != null) {
@@ -132,10 +133,10 @@ public class PaymentService {
             }
 
         } else {
-            if (!contractExists(paymentApiDTO.getCustomerNumber())) {
+            if (!contractExists(downpaymentDTO.getCustomerNumber())) {
                 throw new DataNotFoundException("Customer not found");
             }
-            if (!contractTypeExists(paymentApiDTO.getContractTypeId())) {
+            if (!contractTypeExists(downpaymentDTO.getContractTypeId())) {
                 throw new DataNotFoundException("Contract Type not found");
             }
         }
