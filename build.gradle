@@ -22,12 +22,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.flywaydb:flyway-core:9.2.0' // Updated Flyway dependency
 	implementation 'org.projectlombok:lombok:1.18.24'
+	
+	runtimeOnly 'co.elastic.logging:logback-ecs-encoder:1.6.0'
+
+
+
 	// OpenCSV Dependency
 	implementation 'com.opencsv:opencsv:5.7.1'
 
 	// Jackson Dependencies
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2' // Ensure Jackson is included
 	implementation 'com.fasterxml.jackson.core:jackson-core:2.14.1' // Core Jackson library
+
 
 	runtimeOnly 'org.postgresql:postgresql:42.6.0'
 	annotationProcessor 'org.projectlombok:lombok:1.18.24'
