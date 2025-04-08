@@ -12,7 +12,7 @@ CREATE TYPE vehicle_type AS ENUM (
     'SPIROVEO'
 );
 
-CREATE TYPE lease_contract_status as ENUM ('ACTIVE', 'TERMINATED', 'DEFAULTED','SHORT_CLOSE');
+CREATE TYPE lease_contract_status as ENUM ('ACTIVE', 'TERMINATED', 'DEFAULTED');
 
 CREATE TABLE IF NOT EXISTS contract.contract_type (
     contract_type_id varchar(100) primary key,
@@ -59,7 +59,6 @@ CREATE TYPE contract.lease_payment_status AS ENUM (
     'DEFAULTED', 
     'TERMINATED',
     'NO_RENT_DAY',
-    'SHORT_CLOSE',
     'NO_RENT_DAY_FUTURE'
 );
 CREATE TABLE contract.amortization_entry (

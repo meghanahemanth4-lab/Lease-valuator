@@ -5,7 +5,8 @@ import java.time.LocalDate;
 import lombok.Data;
 
 @Data
-public class PaymentApiDTO {
+public class PaymentApiDTO 
+{
     private String customerNumber;
     private String contractTypeId;
     private LocalDate date;

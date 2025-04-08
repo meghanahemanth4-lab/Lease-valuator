@@ -78,7 +78,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                         .leaseContract(leaseContract)
                         .date(currentDate)
                         .period(ChronoUnit.DAYS.between(startDate, currentDate))
-                        .installment(installment)
+                        .installment(Double.valueOf(leaseContract.getContractType().getInstallment()))
                         .baseRent(Double.valueOf(leaseContract.getContractType().getBaseRent()))
                         .insurance(Double.valueOf(leaseContract.getContractType().getInsuranceAmount()))
                         .maintenance(Double.valueOf(leaseContract.getContractType().getMaintenanceAmount()))
