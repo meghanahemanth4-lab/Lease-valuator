@@ -15,9 +15,9 @@
 
     <appender name="LOKI" class="com.github.loki4j.logback.LokiAppender">
         <http>
-            <url>https://lokis.spiroiothub.com/loki/api/v1/push</url>
-            <user>${username}</user>
-            <password>${password}</password>
+            <url>https://loki.spiroiothub.com/loki/api/v1/push</url>
+<!--            <user>${username}</user>-->
+<!--            <password>${password}</password>-->
         </http>
         <format>
             <label>
