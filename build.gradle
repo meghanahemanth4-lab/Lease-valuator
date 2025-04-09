@@ -16,29 +16,57 @@ java {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' } // Added Spring Milestone repository
 }
 
 dependencies {
+	//Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Spring Boot Dependencies
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.flywaydb:flyway-core:9.2.0' // Updated Flyway dependency
+
+	// AWS SSM Parameter Store Integration
+	implementation 'io.awspring.cloud:spring-cloud-starter-aws-parameter-store-config:2.4.2' // Updated version
+
+	// Flyway for Database Migrations
+	implementation 'org.flywaydb:flyway-core:9.2.0'
+
+	// Lombok for Boilerplate Code Reduction
 	implementation 'org.projectlombok:lombok:1.18.24'
-	// OpenCSV Dependency
+	annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+	// PostgreSQL Driver
+	runtimeOnly 'org.postgresql:postgresql:42.6.0'
+
+	// Logging
+	runtimeOnly 'co.elastic.logging:logback-ecs-encoder:1.6.0'
+
+	// OpenCSV for CSV Parsing
 	implementation 'com.opencsv:opencsv:5.7.1'
 
-	// Jackson Dependencies
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
-	implementation 'com.fasterxml.jackson.core:jackson-core:2.14.1' // Core Jackson library
+	// Jackson for JSON Processing (ensure consistent versions)
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
 
-	runtimeOnly 'org.postgresql:postgresql:42.6.0'
-	annotationProcessor 'org.projectlombok:lombok:1.18.24'
+	// Spring Boot DevTools for Development
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Test Dependencies
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.testcontainers:testcontainers:1.18.3'
 	testImplementation 'org.testcontainers:junit-jupiter:1.18.3'
 	testImplementation 'org.testcontainers:postgresql:1.18.3'
-	// Springdoc OpenAPI dependency
+
+	// Springdoc OpenAPI for API Documentation
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+	// Exclude commons-logging to avoid conflicts
+	configurations.all {
+		exclude group: 'commons-logging', module: 'commons-logging'
+	}
 }
 
 tasks.named('test') {

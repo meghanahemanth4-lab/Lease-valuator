@@ -24,6 +24,14 @@ public class DefaultedLeaseContractMapper {
                 val totalPaymentReceived = sumByField(getSchedulesByStatus(amortizationSchedules, paidStatuses),
                                 AmortizationEntryDto::getInstallment);
 
+                val revenueToRecognise = leaseContractWithAmortizationDTO.getSumOfPvOfCf();
+                val interestToRecognise = sumByField(getSchedulesByStatus(amortizationSchedules, activeStatuses),
+                                AmortizationEntryDto::getInterestComponent);
+                val interestReversal = sumByField(getSchedulesByStatus(amortizationSchedules, defaultAndNoRentDay),
+                                AmortizationEntryDto::getInterestComponent);
+                val totalMoneyReceived = sumByField(getSchedulesByStatus(amortizationSchedules, paidStatuses),
+                                AmortizationEntryDto::getInstallment);
+
                 LocalDate lastDefaultedDate = deriveLastDefaultedDate(amortizationSchedules);
 
                 return DefaultedLeaseContractDTO.builder()
@@ -55,7 +63,8 @@ public class DefaultedLeaseContractMapper {
                                                 List.of(LeasePaymentStatus.NO_RENT_DAY)).size())
                                 .lastDefaultedDate(lastDefaultedDate)
                                 .noOfTimesRedeployed(leaseContract.getNoOfTimesRedeployed())
-
+                                .grossDebtor(revenueToRecognise.add(interestToRecognise).subtract(interestReversal)
+                                                .subtract(totalMoneyReceived))
                                 .build();
 
         }

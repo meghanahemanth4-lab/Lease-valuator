@@ -80,4 +80,10 @@ public class LeaseContract {
     @Column(name = "sum_of_pv_of_cf")
     private BigDecimal sumOfPvOfCf;
 
+    @Column(name = "downpayment_received")
+    private BigDecimal downpaymentReceived;
+
+    @Column(name = "downpayment_trans_date")
+    private LocalDate downpaymentTransDate;
+
 }

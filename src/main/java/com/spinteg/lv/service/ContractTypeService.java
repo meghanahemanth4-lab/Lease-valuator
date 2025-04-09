@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -40,11 +41,25 @@ public class ContractTypeService {
 
     public ResponseEntity<?> saveContractType(CreateContractTypeDTO createContractTypeDTO) {
         ContractType contractType = new ContractType();
+
+        Optional<ContractType> optional = contractTypeRepository.findById(createContractTypeDTO.getContractName());
+        if (optional.isPresent()) {
+            throw new CustomDataMissingException(
+                    "Contract Type is found with ID: " + createContractTypeDTO.getContractName());
+        }
+
         try {
-            Frequency.valueOf(createContractTypeDTO.getPaymentFrequency().name());
+            Frequency.valueOf(createContractTypeDTO.getPaymentFrequency());
         } catch (IllegalArgumentException | NullPointerException e) {
             throw new CustomDataMissingException(
                     "Invalid Payment Frequency: " + createContractTypeDTO.getPaymentFrequency());
+        }
+
+        try {
+            Deployment.valueOf(createContractTypeDTO.getDeployment());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new CustomDataMissingException(
+                    "Invalid Deployment Type: " + createContractTypeDTO.getDeployment());
         }
         contractType.setBaseRent(null);
         contractType.setInsuranceAmount(null);
@@ -58,9 +73,9 @@ public class ContractTypeService {
         contractType.setInterestRate(interestRateRepository.findById(1L)
                 .orElseThrow(() -> new CustomDataMissingException("Interest rate not found")).getRate());
 
-        contractType.setPaymentFrequency(createContractTypeDTO.getPaymentFrequency());
+        contractType.setPaymentFrequency(Frequency.valueOf(createContractTypeDTO.getPaymentFrequency()));
         contractType.setTypeOfVehicle(fromString(createContractTypeDTO.getTypeOfVehicle()));
-        contractType.setDeployment(Deployment.LEASING);
+        contractType.setDeployment(Deployment.valueOf(createContractTypeDTO.getDeployment()));
 
         contractType.setDownpayment(
                 Float.parseFloat(DataValidation.isNumeric(createContractTypeDTO.getDownPayment(), "Downpayment")));

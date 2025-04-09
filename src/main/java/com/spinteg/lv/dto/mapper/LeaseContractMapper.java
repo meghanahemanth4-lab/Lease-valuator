@@ -28,9 +28,9 @@ public class LeaseContractMapper {
                 contractType.getBaseRent(),
                 contractType.getMaintenanceAmount(),
                 contractType.getInsuranceAmount(),
-                contractType.getDownpayment()
-        );
+                contractType.getDownpayment());
     }
+
     public static LeaseContractDTO toLeaseContractDTO(LeaseContract leaseContract) {
         return new LeaseContractDTO(
                 leaseContract.getContractNo(),
@@ -47,9 +47,9 @@ public class LeaseContractMapper {
                 toContractTypeDTO(leaseContract.getContractType()),
                 leaseContract.getVehicleStatus(),
                 leaseContract.getNoOfTimesRedeployed(),
-                leaseContract.getSumOfPvOfCf()
-        );
+                leaseContract.getSumOfPvOfCf());
     }
+
     // Converts LeaseContract entity to LeaseContractDTO
     public static LeaseContractWithAmortizationDTO toLeaseContractWithAmortizationDTO(LeaseContract leaseContract) {
         LeaseContractWithAmortizationDTO leaseContractWithAmortizationDTO = new LeaseContractWithAmortizationDTO();
@@ -77,9 +77,12 @@ public class LeaseContractMapper {
                 .collect(Collectors.toList());
 
         leaseContractWithAmortizationDTO.setLeasePaymentEntries(amortizationEntryDtos);
-        leaseContractWithAmortizationDTO.setSumOfPvOfCf(BigDecimal.valueOf(amortizationEntryDtos.stream().map(AmortizationEntryDto::getPvOfCf).reduce(Double::sum).get()));
-        leaseContractWithAmortizationDTO.setTotalInterest(BigDecimal.valueOf(amortizationEntryDtos.stream().map(AmortizationEntryDto::getInterestComponent).reduce(Double::sum).get()));
-        leaseContractWithAmortizationDTO.setTotalLeasePayments(BigDecimal.valueOf(amortizationEntryDtos.stream().map(AmortizationEntryDto::getInstallment).reduce(Double::sum).get()));
+        leaseContractWithAmortizationDTO.setSumOfPvOfCf(BigDecimal.valueOf(
+                amortizationEntryDtos.stream().map(AmortizationEntryDto::getPvOfCf).reduce(Double::sum).get()));
+        leaseContractWithAmortizationDTO.setTotalInterest(BigDecimal.valueOf(amortizationEntryDtos.stream()
+                .map(AmortizationEntryDto::getInterestComponent).reduce(Double::sum).get()));
+        leaseContractWithAmortizationDTO.setTotalLeasePayments(BigDecimal.valueOf(
+                amortizationEntryDtos.stream().map(AmortizationEntryDto::getInstallment).reduce(Double::sum).get()));
         return leaseContractWithAmortizationDTO;
     }
 
@@ -92,7 +95,9 @@ public class LeaseContractMapper {
         amortizationEntryDto.setLeasePaymentEntryId(amortizationEntry.getAmortizationEntryId());
         amortizationEntryDto.setDate(amortizationEntry.getDate());
         amortizationEntryDto.setPeriod(amortizationEntry.getPeriod());
+        amortizationEntryDto.setBaseRent(amortizationEntry.getBaseRent());
         amortizationEntryDto.setInstallment(amortizationEntry.getInstallment());
+        amortizationEntryDto.setBaseRent(amortizationEntry.getBaseRent());
         amortizationEntryDto.setInterestComponent(interestComponent);
         amortizationEntryDto.setPrincipalComponent(principalComponent);
         amortizationEntryDto.setRemainingAmount(amortizationEntry.getRemainingAmount());
@@ -101,8 +106,8 @@ public class LeaseContractMapper {
         amortizationEntryDto.setCumulativePrincipal(amortizationEntry.getCumulativePrincipal());
         amortizationEntryDto.setCumulativeInterest(amortizationEntry.getCumulativeInterest());
         amortizationEntryDto.setClosingBalance(amortizationEntry.getClosingBalance());
-        amortizationEntryDto.setPercentageOfInterest(interestComponent/(interestComponent+principalComponent));
-        amortizationEntryDto.setPercentageOfPrincipal(principalComponent/(interestComponent+principalComponent));
+        amortizationEntryDto.setPercentageOfInterest(interestComponent / (interestComponent + principalComponent));
+        amortizationEntryDto.setPercentageOfPrincipal(principalComponent / (interestComponent + principalComponent));
         amortizationEntryDto.setPvOfCf(amortizationEntry.getPvOfCf());
         return amortizationEntryDto;
     }
