@@ -41,7 +41,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql:42.6.0'
 
 	// Logging
-	runtimeOnly 'co.elastic.logging:logback-ecs-encoder:1.6.0'
+	implementation 'co.elastic.logging:logback-ecs-encoder:1.6.0'
 	implementation "com.github.loki4j:loki-logback-appender:1.5.2"
 
 
