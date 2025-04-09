@@ -44,6 +44,7 @@ dependencies {
 	runtimeOnly 'co.elastic.logging:logback-ecs-encoder:1.6.0'
 	implementation "com.github.loki4j:loki-logback-appender:1.5.2"
 
+
 	// OpenCSV for CSV Parsing
 	implementation 'com.opencsv:opencsv:5.7.1'
 

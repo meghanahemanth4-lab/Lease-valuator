@@ -13,30 +13,46 @@
         </encoder>
     </appender>
 
+    <appender name="LOKI" class="com.github.loki4j.logback.LokiAppender">
+        <http>
+            <url>https://lokis.spiroiothub.com/loki/api/v1/push</url>
+            <user>${username}</user>
+            <password>${password}</password>
+        </http>
+        <format>
+            <label>
+                <pattern>
+                    job="lva-service",env="${LOKI_LOG_ENV}"
+                </pattern>
+            </label>
+            <messagePattern>%msg</messagePattern>
+        </format>
+    </appender>
+
+<!--    &lt;!&ndash; Loki Appender &ndash;&gt;-->
+<!--    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">-->
+<!--        <http>-->
+<!--            <url>https://lokis.spiroiothub.com/loki/api/v1/push</url>-->
+<!--            <auth>-->
+<!--                <username>${username}</username>-->
+<!--                <password>${password}</password>-->
+<!--            </auth>-->
+<!--        </http>-->
+<!--        <format>-->
+<!--            <label>-->
+<!--                <pattern>LvaService=lva-service-${LOKI_LOG_ENV}</pattern>-->
+<!--                <readMarkers>true</readMarkers>-->
+<!--            </label>-->
+<!--            <message>-->
+<!--                <pattern>-->
+<!--                    date="%d{yyyy-MM-dd HH:mm:ss}" thread="%thread" level="%-5level" logger="%logger{36}" class="%class" method="%method" line="%line" msg="%msg" traceId="%X{traceId}" spanId="%X{spanId}" host="${HOSTNAME}"%n-->
+<!--                </pattern>-->
+<!--            </message>-->
+<!--        </format>-->
+<!--    </appender>-->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <!-- Loki Appender -->
-    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
-        <http>
-            <url>https://lokis.spiroiothub.com/loki/api/v1/push</url>
-            <auth>
-                <username>${username}</username>
-                <password>${password}</password>
-            </auth>
-        </http>
-        <format>
-            <label>
-                <pattern>LvaService=lva-service-${LOKI_LOG_ENV}</pattern>
-                <readMarkers>true</readMarkers>
-            </label>
-            <message>
-                <pattern>
-                    date="%d{yyyy-MM-dd HH:mm:ss}" thread="%thread" level="%-5level" logger="%logger{36}" class="%class" method="%method" line="%line" msg="%msg" traceId="%X{traceId}" spanId="%X{spanId}" host="${HOSTNAME}"%n
-                </pattern>
-            </message>
-        </format>
-    </appender>
 
 </configuration>
