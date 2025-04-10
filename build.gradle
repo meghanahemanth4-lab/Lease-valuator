@@ -10,9 +10,10 @@ version = '0.0.1-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
+
 
 repositories {
 	mavenCentral()
@@ -65,6 +66,10 @@ dependencies {
 	// Springdoc OpenAPI for API Documentation
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
+	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+	 compileOnly 'org.projectlombok:lombok:1.18.30'  // Upgrade to latest
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
 	// Exclude commons-logging to avoid conflicts
 	configurations.all {
 		exclude group: 'commons-logging', module: 'commons-logging'
@@ -77,7 +82,7 @@ tasks.named('test') {
 }
 
 jacoco {
-	toolVersion = "0.8.8" // Use the latest JaCoCo version
+	toolVersion = "0.8.10" // Use the latest JaCoCo version
 }
 
 jacocoTestReport {
