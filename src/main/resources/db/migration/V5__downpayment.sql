@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS contract.downpayments (
+CREATE TABLE contract.downpayments (
     id UUID PRIMARY KEY,
     customer_number VARCHAR(40),
     customer_code VARCHAR(40),
