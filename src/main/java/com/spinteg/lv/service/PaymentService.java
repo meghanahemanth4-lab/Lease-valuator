@@ -1,8 +1,7 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
-import com.spinteg.lv.ExceptionHandling.DataValidation;
-import com.spinteg.lv.controller.ContractTypeController;
+import com.spinteg.lv.exception.DataNotFoundException;
+import com.spinteg.lv.exception.DataValidation;
 import com.spinteg.lv.dto.DownpaymentDTO;
 import com.spinteg.lv.dto.PaymentApiDTO;
 import com.spinteg.lv.entity.AmortizationEntry;
@@ -12,17 +11,11 @@ import com.spinteg.lv.repository.AmortizationEntryRepository;
 import com.spinteg.lv.repository.ContractTypeRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
-import java.rmi.dgc.Lease;
 import java.util.List;
-import java.util.Optional;
-
-import javax.xml.crypto.Data;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +54,8 @@ public class PaymentService {
                         return ResponseEntity.status(400).body("No rent day");
                     }
 
-                    if (checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
-                            entry.getInstallment().toString()) == false)
+                    if (!checkAmountsAreEqual(paymentApiDTO.getPaymentAmount().toString(),
+                            entry.getInstallment().toString()))
                         return ResponseEntity.status(400).body("Payment amount does not match the installment rent");
 
                     entry.setLeasePaymentStatus(LeasePaymentStatus.PAID);
@@ -94,7 +87,7 @@ public class PaymentService {
         return !contractTypeRepository.findByContractTypeId(contractTypeId).isEmpty();
     }
 
-    private boolean checkAmountareEqual(String paymentAmount, String leaseRent) {
+    private boolean checkAmountsAreEqual(String paymentAmount, String leaseRent) {
         String amount = DataValidation.isNotNegativeAndZero(paymentAmount, "Payment Amount");
         return Double.valueOf(amount).equals((Double.valueOf(leaseRent.trim())));
     }
@@ -119,7 +112,7 @@ public class PaymentService {
             DataValidation.isNotNegativeAndZero(downpaymentDTO.getPaymentAmount().toString(), "Payment Amount");
 
             // Check if the payment amount is equal to the downpayment
-            if (checkAmountareEqual(downpaymentDTO.getPaymentAmount().toString(),
+            if (checkAmountsAreEqual(downpaymentDTO.getPaymentAmount().toString(),
                     String.valueOf(leaseContract.getContractType().getDownpayment())) == false)
                 return ResponseEntity.status(400).body("Payment amount does not match the downpayment");
 

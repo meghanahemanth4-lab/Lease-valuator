@@ -1,8 +1,6 @@
-package com.spinteg.lv.ExceptionHandling;
+package com.spinteg.lv.exception;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ValidationUtil {
 

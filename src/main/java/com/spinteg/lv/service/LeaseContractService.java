@@ -1,7 +1,7 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.ValidationUtil;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.ValidationUtil;
 import com.spinteg.lv.dto.CreateLeaseContractDTO;
 import com.spinteg.lv.entity.ContractType;
 import com.spinteg.lv.entity.Customer;
@@ -18,9 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 @AllArgsConstructor

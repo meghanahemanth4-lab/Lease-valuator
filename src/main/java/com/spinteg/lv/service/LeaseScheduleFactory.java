@@ -1,10 +1,9 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
+import com.spinteg.lv.exception.CustomDataMissingException;
 import com.spinteg.lv.entity.enums.Frequency;
 import com.spinteg.lv.repository.LeaseContractRepository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class LeaseScheduleFactory {

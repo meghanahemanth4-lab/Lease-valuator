@@ -3,20 +3,18 @@ package com.spinteg.lv.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
-import com.spinteg.lv.ExceptionHandling.ResponseHandler;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataNotFoundException;
+import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.dto.CustomerDTO;
 import com.spinteg.lv.dto.CustomerInputDTO;
 import com.spinteg.lv.dto.mapper.LeaseContractMapper;
-import com.spinteg.lv.entity.ContractType;
 import com.spinteg.lv.entity.Customer;
 import com.spinteg.lv.entity.CustomerContractDraft;
 import com.spinteg.lv.entity.LeaseContract;

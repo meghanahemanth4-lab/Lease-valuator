@@ -1,6 +1,6 @@
 package com.spinteg.lv.controller;
 
-import com.spinteg.lv.ExceptionHandling.ResponseHandler;
+import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.entity.InterestRate;
 import com.spinteg.lv.service.InterestRateService;
 import lombok.AllArgsConstructor;

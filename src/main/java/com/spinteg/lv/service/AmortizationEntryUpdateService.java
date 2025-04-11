@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -20,29 +21,29 @@ public class AmortizationEntryUpdateService {
     private final AmortizationEntryRepository amortizationEntryRepository;
     private final LeaseContractRepository leaseContractRepository;
 
-    public boolean updateAmortizationEntry(AmortizationEntryUpdateDTO amortizationEntryUpdateDTO) {
+    public boolean updateAmortizationEntry(UUID amortizationEntryId, LeasePaymentStatus status) {
         Optional<AmortizationEntry> amortizationEntry = amortizationEntryRepository
-                .findById(amortizationEntryUpdateDTO.getAmortizationEntryId());
+                .findById(amortizationEntryId);
         if (amortizationEntry.isPresent()) {
             val amortizationEntryToUpdate = amortizationEntry.get();
             val statusBeforeUpdate = amortizationEntryToUpdate.getLeasePaymentStatus();
-            amortizationEntryToUpdate.setLeasePaymentStatus(amortizationEntryUpdateDTO.getStatus());
+            amortizationEntryToUpdate.setLeasePaymentStatus(status);
             amortizationEntryRepository.saveAndFlush(amortizationEntryToUpdate);
 
             if (statusBeforeUpdate.equals(LeasePaymentStatus.DEFAULTED)
-                    && amortizationEntryUpdateDTO.getStatus().equals(LeasePaymentStatus.PAID)) {
+                    && status.equals(LeasePaymentStatus.PAID)) {
                 correctLeaseStatusIfRequired(amortizationEntryToUpdate.getLeaseContract(),
                         amortizationEntryToUpdate.getLeaseContract().getAmortizationEntries(),
                         LeasePaymentStatus.DEFAULTED);
             }
             if (statusBeforeUpdate.equals(LeasePaymentStatus.TERMINATED)
-                    && amortizationEntryUpdateDTO.getStatus().equals(LeasePaymentStatus.PAID)) {
+                    && status.equals(LeasePaymentStatus.PAID)) {
                 correctLeaseStatusIfRequired(amortizationEntryToUpdate.getLeaseContract(),
                         amortizationEntryToUpdate.getLeaseContract().getAmortizationEntries(),
                         LeasePaymentStatus.TERMINATED);
             }
             if (statusBeforeUpdate.equals(LeasePaymentStatus.SHORT_CLOSE)
-                    && amortizationEntryUpdateDTO.getStatus().equals(LeasePaymentStatus.PAID)) {
+                    && status.equals(LeasePaymentStatus.PAID)) {
                 correctLeaseStatusIfRequired(amortizationEntryToUpdate.getLeaseContract(),
                         amortizationEntryToUpdate.getLeaseContract().getAmortizationEntries(),
                         LeasePaymentStatus.SHORT_CLOSE);

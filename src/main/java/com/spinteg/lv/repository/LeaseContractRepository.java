@@ -174,6 +174,45 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
                         """, nativeQuery = true)
         void updatePendingPaymentsToDefaulted();
 
+        @Modifying
+        @Transactional
+        @Query(value = """
+                        UPDATE contract.amortization_entry ae
+                        SET lease_payment_status = 'NO_RENT_DAY'
+                        FROM contract.lease_contract lc
+                        WHERE ae.lease_contract = lc.contract_no
+                        AND ae.date < CURRENT_DATE
+                        AND ae.lease_payment_status = 'NO_RENT_DAY_FUTURE'
+                        AND lc.status IN ('ACTIVE', 'DEFAULTED');
+                        """, nativeQuery = true)
+        void updateNoRentDayFutureAmortizationEntriesForPast();
+        @Modifying
+        @Transactional
+        @Query(value = """
+                UPDATE contract.amortization_entry ae
+                SET lease_payment_status = 'DEFAULTED'
+                FROM contract.lease_contract lc
+                WHERE ae.lease_contract = lc.contract_no
+                  AND ae.date < CURRENT_DATE
+                  AND ae.lease_payment_status = 'PENDING'
+                  AND lc.status IN ('ACTIVE', 'DEFAULTED');
+                """, nativeQuery = true)
+        void updatePendingPaymentsToDefaultedForPast();
+
+        @Modifying
+        @Transactional
+        @Query(value = """
+                        UPDATE contract.lease_contract lc
+                        SET status = 'DEFAULTED'
+                        WHERE lc.contract_no IN (
+                            SELECT ae.lease_contract
+                            FROM contract.amortization_entry ae
+                            WHERE ae.date < CURRENT_DATE
+                              AND ae.lease_payment_status = 'PENDING');
+                        """, nativeQuery = true)
+        void updateLeaseContractToDefaulted();
+
+
         @Query(value = """
                         SELECT SUM(lc.downpayment_received)
                         FROM contract.lease_contract lc

@@ -1,4 +1,4 @@
-package com.spinteg.lv.service;
+package com.spinteg.lv.scheduler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;

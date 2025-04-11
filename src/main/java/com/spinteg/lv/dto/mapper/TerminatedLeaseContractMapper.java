@@ -26,7 +26,7 @@ public class TerminatedLeaseContractMapper {
                 val interestReversal = sumByField(getSchedulesByStatus(amortizationSchedules, defaultAndNoRentDay),
                                 AmortizationEntryDto::getInterestComponent);
                 val totalMoneyReceived = sumByField(getSchedulesByStatus(amortizationSchedules, paidStatuses),
-                                AmortizationEntryDto::getInstallment);
+                                AmortizationEntryDto::getBaseRent);
 
                 LocalDate dateOfTermination = deriveTerminationDate(amortizationSchedules);
 

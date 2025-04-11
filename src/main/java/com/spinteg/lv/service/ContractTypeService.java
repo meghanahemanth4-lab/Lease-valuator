@@ -1,9 +1,9 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
-import com.spinteg.lv.ExceptionHandling.DataValidation;
-import com.spinteg.lv.ExceptionHandling.ResponseHandler;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataNotFoundException;
+import com.spinteg.lv.exception.DataValidation;
+import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.dto.CreateContractTypeDTO;
 import com.spinteg.lv.dto.UpdateContractTypeDTO;
 import com.spinteg.lv.entity.ContractType;

@@ -1,4 +1,4 @@
-package com.spinteg.lv.ExceptionHandling;
+package com.spinteg.lv.exception;
 
 import java.util.HashMap;
 import java.util.Map;
