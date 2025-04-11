@@ -16,7 +16,7 @@ import com.spinteg.lv.exception.CustomDataMissingException;
 import com.spinteg.lv.exception.DataNotFoundException;
 
 @Service
-public class Holidayservice {
+public class HolidayService {
 
     public List<String> getHolidaysDatesForCountry(String country) {
         List<String> dates = new ArrayList<>();

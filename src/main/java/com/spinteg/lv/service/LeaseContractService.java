@@ -27,7 +27,7 @@ public class LeaseContractService {
     private final ContractTypeRepository contractTypeRepository;
     private final AmortizationEntryRepository amortizationEntryRepository;
     private final CustomerRepository customerRepository;
-    private final Holidayservice holidayservice;
+    private final HolidayService holidayservice;
 
     public ResponseEntity<?> saveLeaseContract(CreateLeaseContractDTO dto) {
 

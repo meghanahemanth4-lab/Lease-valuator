@@ -32,7 +32,7 @@ public class CustomerService {
     private final LeaseContractRepository leaseContractRepository;
     private final CustomerRepository customerRepository;
     private final ContractTypeRepository contractTypeRepository;
-    private final Holidayservice holidayservice;
+    private final HolidayService holidayservice;
 
     public ResponseEntity<?> createNewCustomer(@RequestBody CustomerInputDTO dto) {
 
