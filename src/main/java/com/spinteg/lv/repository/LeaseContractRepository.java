@@ -146,10 +146,15 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
                         ON lc.contract_type_id = ct.contract_type_id
                         WHERE ct.deployment = CAST(:deployment AS contract.deployment)
                         AND ct.type_of_vehicle = CAST(:vehicleType AS contract.vehicle_type)
+                        AND EXTRACT(MONTH FROM lc.start_date) = :month
+                        AND EXTRACT(YEAR FROM lc.start_date) = :year
+                        AND lc.status = 'ACTIVE'
                         """, nativeQuery = true)
         Float sumPvOfCfByDeploymentAndVehicleTypeAndMonthAndYear(
                         String deployment,
-                        String vehicleType);
+                        String vehicleType,
+                        int month,
+                        int year);
 
         @Query(value = """
                         UPDATE contract.amortization_entry ae
@@ -158,7 +163,7 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
                         WHERE ae.lease_contract = lc.contract_no
                         AND ae.date = CURRENT_DATE
                         AND ae.lease_payment_status = 'NO_RENT_DAY_FUTURE'
-                        AND lc.status IN ('ACTIVE', 'DEFAULTED')
+                        AND lc.status = 'ACTIVE'
                         """, nativeQuery = true)
         void updateAmortizationEntriesForToday();
 
