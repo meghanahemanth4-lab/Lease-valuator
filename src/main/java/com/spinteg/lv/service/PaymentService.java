@@ -7,7 +7,6 @@ import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.Customer;
 import com.spinteg.lv.entity.Downpayment;
 import com.spinteg.lv.entity.LeaseContract;
-import com.spinteg.lv.entity.enums.Deployment;
 import com.spinteg.lv.entity.enums.LeasePaymentStatus;
 import com.spinteg.lv.entity.enums.VehicleType;
 import com.spinteg.lv.exception.DataNotFoundException;
@@ -18,6 +17,10 @@ import com.spinteg.lv.repository.CustomerRepository;
 import com.spinteg.lv.repository.DownPaymentRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
 
+import com.spinteg.lv.repository.*;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -198,14 +201,13 @@ public class PaymentService {
 
             // LeaseContract contract = leaseContractRepository.save(leaseContract);
             Downpayment downpayObj = downPaymentRepository.save(obj);
-            if (downpayObj != null) {
-                return ResponseEntity.ok("Payment status updated successfully");
-            }
+            return ResponseEntity.ok("Payment status updated successfully");
 
         } else {
             if (!contractTypeExists(downpaymentDTO.getContractTypeId())) {
                 throw new DataNotFoundException("Contract Type not found");
             }
+            val contractType = contractTypeRepository.findByContractTypeId(downpaymentDTO.getContractTypeId()).get();
             Downpayment downpayment = new Downpayment();
             if (customerExists(downpaymentDTO.getCustomerNumber())) {
 
@@ -218,8 +220,8 @@ public class PaymentService {
                     downpayment.setContractTypeId(customer.get().getCustomerContractDraft().getContractTypeId());
                     downpayment.setPaymentAmount(BigDecimal.valueOf(downpaymentDTO.getPaymentAmount()));
                     downpayment.setTransactionDate(Date.valueOf(downpaymentDTO.getTransactionDate()));
-                    // downpayment.setVehicleType(VehicleType.valueOf(downpaymentDTO.getVehicleType()));
-                    // downpayment.setDeployment(Deployment.valueOf(downpaymentDTO.getDeployment()));
+                    downpayment.setVehicleType(contractType.getTypeOfVehicle());
+                    downpayment.setDeployment(contractType.getDeployment());
                     downPaymentRepository.save(downpayment);
                     // System.out.println("Downpayment request is accepted");
                     return ResponseEntity.ok("Payment status updated successfully");
@@ -232,8 +234,8 @@ public class PaymentService {
             downpayment.setCustomerCode(downpaymentDTO.getCustomerNumber());
             downpayment.setPaymentAmount(BigDecimal.valueOf(downpaymentDTO.getPaymentAmount()));
             downpayment.setTransactionDate(Date.valueOf(downpaymentDTO.getTransactionDate()));
-            // downpayment.setVehicleType(VehicleType.valueOf(downpaymentDTO.getVehicleType()));
-            // downpayment.setDeployment(Deployment.valueOf(downpaymentDTO.getDeployment()));
+            downpayment.setVehicleType(contractType.getTypeOfVehicle());
+            downpayment.setDeployment(contractType.getDeployment());
             Downpayment downpaymentObj = downPaymentRepository.save(downpayment);
             if (downpaymentObj != null) {
                 throw new AcceptedException("Customer is not found.But Downpayment request is accepted");
