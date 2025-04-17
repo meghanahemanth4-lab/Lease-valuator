@@ -25,6 +25,6 @@ public class TerminatedLeaseContractDTO {
     LocalDate startDate;
     LocalDate dateOfTermination;
     Integer numberOfNoRentDay;
-    Integer noOfTimesRedeployed;
+    Integer noOfTimesDeployed;
 
 }

@@ -62,7 +62,7 @@ public class DefaultedLeaseContractMapper {
                                 .numberOfNoRentDay(getSchedulesByStatus(amortizationSchedules,
                                                 List.of(LeasePaymentStatus.NO_RENT_DAY)).size())
                                 .lastDefaultedDate(lastDefaultedDate)
-                                .noOfTimesRedeployed(leaseContract.getNoOfTimesRedeployed())
+                                .noOfTimesDeployed(leaseContract.getNoOfTimesDeployed())
                                 .grossDebtor(revenueToRecognise.add(interestToRecognise).subtract(interestReversal)
                                                 .subtract(totalMoneyReceived))
                                 .build();

@@ -13,12 +13,12 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Table(name = "downpayments", indexes = @Index(columnList = "transaction_date"))
+@Table(name = "downpayments", schema = "contract", indexes = @Index(columnList = "transaction_date"))
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Downpayment {
 
     @Id
@@ -35,7 +35,7 @@ public class Downpayment {
 
     @Column(name = "contract_type_id")
     private String contractTypeId;
-    
+
     @Column(name = "payment_amount")
     private BigDecimal paymentAmount;
 

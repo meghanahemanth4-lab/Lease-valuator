@@ -2,8 +2,6 @@ package com.spinteg.lv.controller;
 
 import com.spinteg.lv.dto.CreateLeaseContractDTO;
 import com.spinteg.lv.dto.LeaseContractDTO;
-import com.spinteg.lv.entity.Customer;
-import com.spinteg.lv.entity.CustomerContractDraft;
 import com.spinteg.lv.entity.LeaseContract;
 import com.spinteg.lv.repository.CustomerRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
@@ -12,6 +10,7 @@ import com.spinteg.lv.service.LeaseContractService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Optional;

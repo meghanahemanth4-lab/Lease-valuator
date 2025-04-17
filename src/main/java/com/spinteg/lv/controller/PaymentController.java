@@ -18,8 +18,14 @@ public class PaymentController {
     public ResponseEntity<?> updatePaymentStatus(@RequestBody PaymentApiDTO paymentApiDTO) {
         return paymentService.updatePaymentStatusToPaid(paymentApiDTO);
     }
+
+    // @PostMapping("/downpayment")
+    // public ResponseEntity<?> updateDownPaymentStatus(@RequestBody DownpaymentDTO
+    // downpaymentDTO) {
+    // return paymentService.updateDownPaymentStatusToPaid(downpaymentDTO);
+    // }
     @PostMapping("/downpayment")
     public ResponseEntity<?> updateDownPaymentStatus(@RequestBody DownpaymentDTO downpaymentDTO) {
-        return paymentService.updateDownPaymentStatusToPaid(downpaymentDTO);
+        return paymentService.updatePaymentStatustobePaid(downpaymentDTO);
     }
 }

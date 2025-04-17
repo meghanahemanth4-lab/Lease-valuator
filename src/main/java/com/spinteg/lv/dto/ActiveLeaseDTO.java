@@ -31,7 +31,7 @@ public class ActiveLeaseDTO {
     private Double interestReceived;
     private Double outstandingBalance;
     private Double reversalIfTerminated;
-    private Integer noOfTimesRedeployed;
+    private Integer noOfTimesDeployed;
     private List<String> lastSevenDaysDates;
     private List<Object> lastSevenDaysData;
 

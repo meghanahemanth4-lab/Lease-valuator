@@ -55,10 +55,11 @@ public class LeaseContractService {
         leaseContract.setCountry(dto.getCountry());
         leaseContract.setCity(dto.getCity());
         leaseContract.setVehicleStatus(VehicleStatus.valueOf(dto.getVehicleStatus()));
-        leaseContract.setNoOfTimesRedeployed(dto.getNoOfTimesRedeployed());
+        leaseContract.setNoOfTimesDeployed(dto.getNoOfTimesDeployed());
         leaseContract.setCustomerName(dto.getCustomerName());
         leaseContract.setCustomerNumber(dto.getCustomerNumber());
         leaseContract.setContractType(contractType);
+        leaseContract.setVehicleNo(dto.getVehicleNumber());
 
         List<String> holidaysList = holidayservice.getHolidaysDatesForCountry(dto.getCountry());
 
@@ -109,7 +110,7 @@ public class LeaseContractService {
     }
 
     public boolean checkRequiredFields(CreateLeaseContractDTO dto) {
-        boolean isVaild = ValidationUtil.checkRequiredFields(dto);
+        boolean isVaild = ValidationUtil.checkRequiredFields(dto, "vehicleNumber");
 
         return isVaild;
     }

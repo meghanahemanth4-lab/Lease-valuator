@@ -32,6 +32,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
+    @ExceptionHandler(AcceptedException.class)
+    public ResponseEntity<String> handleAcceptedException(AcceptedException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.valueOf(202)); // 202
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleJsonParseError(HttpMessageNotReadableException ex) {
         Map<String, String> errorResponse = new HashMap<>();

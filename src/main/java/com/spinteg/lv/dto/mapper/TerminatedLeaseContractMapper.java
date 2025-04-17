@@ -52,7 +52,7 @@ public class TerminatedLeaseContractMapper {
                                                 getSchedulesByStatus(amortizationSchedules,
                                                                 List.of(LeasePaymentStatus.NO_RENT_DAY)).size())
                                 .dateOfTermination(dateOfTermination)
-                                .noOfTimesRedeployed(leaseContract.getNoOfTimesRedeployed())
+                                .noOfTimesDeployed(leaseContract.getNoOfTimesDeployed())
 
                                 .build();
         }
