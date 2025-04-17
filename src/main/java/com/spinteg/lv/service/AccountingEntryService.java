@@ -17,7 +17,8 @@ public class AccountingEntryService {
         public AccountingEntryDTO getAccountingEntry(AccountingEntryUpdate update) {
                 AccountingEntryDTO dto = new AccountingEntryDTO();
                 dto.setLeaseReceivableDr(leaseContractRepository.sumPvOfCfByDeploymentAndVehicleTypeAndMonthAndYear(
-                                update.getDeployment().name(), VehicleType.fromValue(update.getVehicleType()).name()));
+                                update.getDeployment().name(), VehicleType.fromValue(update.getVehicleType()).name(),update.getMonth(),
+                                update.getYear()));
                 dto.setBikeSaleFinanceLeaseCr(dto.getLeaseReceivableDr());
                 dto.setRentalCollectionWalletDr(
                                 leaseContractRepository.sumBaseRentByDeploymentAndVehicleTypeAndMonthAndYear(
