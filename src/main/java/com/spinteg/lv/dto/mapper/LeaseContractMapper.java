@@ -32,22 +32,23 @@ public class LeaseContractMapper {
         }
 
         public static LeaseContractDTO toLeaseContractDTO(LeaseContract leaseContract) {
-                return new LeaseContractDTO(
-                                leaseContract.getContractNo(),
-                                leaseContract.getCustomerId(),
-                                leaseContract.getVehicleNo(),
-                                leaseContract.getCustomerName(),
-                                leaseContract.getStartDate(),
-                                leaseContract.getEndDate(),
-                                leaseContract.getStatus(),
-                                leaseContract.getRevenuePending(),
-                                leaseContract.getValueOfLeaseToday(),
-                                leaseContract.getCity(),
-                                leaseContract.getCountry(),
-                                toContractTypeDTO(leaseContract.getContractType()),
-                                leaseContract.getVehicleStatus(),
-                                leaseContract.getNoOfTimesDeployed(),
-                                leaseContract.getSumOfPvOfCf());
+                return LeaseContractDTO.builder()
+                                .contractNo(leaseContract.getContractNo())
+                                .customerNumber(leaseContract.getCustomerId())
+                                .vehicleNo(leaseContract.getVehicleNo().getVehicleNo())
+                                .customerName(leaseContract.getCustomerName())
+                                .leaseContractStatus(leaseContract.getStatus())
+                                .startDate(leaseContract.getStartDate())
+                                .endDate(leaseContract.getEndDate())
+                                .revenuePending(leaseContract.getRevenuePending())
+                                .valueOfLeaseToday(leaseContract.getValueOfLeaseToday())
+                                .city(leaseContract.getCity())
+                                .country(leaseContract.getCountry())
+                                .contractTypeDTO(toContractTypeDTO(leaseContract.getContractType()))
+                                .vehicleStatus(leaseContract.getVehicleStatus())
+                                .noOfTimesDeployed(leaseContract.getVehicleNo().getNoOfTimesDeployed())
+                                .sumOfPvOfCf(leaseContract.getSumOfPvOfCf())
+                                .build();
         }
 
         // Converts LeaseContract entity to LeaseContractDTO
@@ -57,7 +58,7 @@ public class LeaseContractMapper {
                 // Mapping LeaseContract fields
                 leaseContractWithAmortizationDTO.setContractNo(leaseContract.getContractNo());
                 leaseContractWithAmortizationDTO.setCustomerId(leaseContract.getCustomerId());
-                leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo());
+                leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
                 leaseContractWithAmortizationDTO.setCustomerName(leaseContract.getCustomerName());
                 leaseContractWithAmortizationDTO.setCustomerNumber(leaseContract.getCustomerNumber());
                 leaseContractWithAmortizationDTO.setStartDate(leaseContract.getStartDate());

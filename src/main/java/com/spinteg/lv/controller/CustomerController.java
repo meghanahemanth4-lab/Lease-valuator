@@ -43,4 +43,9 @@ public class CustomerController {
     public ResponseEntity<Map<String, Object>> getLeasesByCustomer(@PathVariable String customerId) {
         return customerService.getLeasesByCustomer(customerId);
     }
+
+    @GetMapping("/customer-draft")
+    public ResponseEntity<?> getCustomerDraft(@RequestParam String customerNumber) {
+        return customerService.getCustomerDraft(customerNumber);
+    }
 }

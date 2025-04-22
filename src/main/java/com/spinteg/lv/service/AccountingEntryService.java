@@ -6,7 +6,6 @@ import com.spinteg.lv.repository.LeaseContractRepository;
 import com.spinteg.lv.entity.enums.VehicleType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 @Service
 public class AccountingEntryService {
@@ -17,7 +16,8 @@ public class AccountingEntryService {
         public AccountingEntryDTO getAccountingEntry(AccountingEntryUpdate update) {
                 AccountingEntryDTO dto = new AccountingEntryDTO();
                 dto.setLeaseReceivableDr(leaseContractRepository.sumPvOfCfByDeploymentAndVehicleTypeAndMonthAndYear(
-                                update.getDeployment().name(), VehicleType.fromValue(update.getVehicleType()).name(),update.getMonth(),
+                                update.getDeployment().name(), VehicleType.fromValue(update.getVehicleType()).name(),
+                                update.getMonth(),
                                 update.getYear()));
                 dto.setBikeSaleFinanceLeaseCr(dto.getLeaseReceivableDr());
                 dto.setRentalCollectionWalletDr(

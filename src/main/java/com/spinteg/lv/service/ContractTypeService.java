@@ -84,7 +84,7 @@ public class ContractTypeService {
                         DataValidation.isNumeric(createContractTypeDTO.getInstallment(), "Installment"),
                         "Installment")));
         contractTypeRepository.save(contractType);
-        return ResponseHandler.handleResponseEntity("ContractType Created", contractType);
+        return ResponseHandler.handleResponseEntity("ContractType Created", contractType,null);
     }
 
     public List<ContractType> getALlContractTypes() {
@@ -120,7 +120,7 @@ public class ContractTypeService {
 
         // Checking validation for the fields
         upadteContractTypeFieldsValidation(contractType, objContractType);
-        return ResponseHandler.handleResponseEntity("ContractType Updated", contractTypeRepository.save(contractType));
+        return ResponseHandler.handleResponseEntity("ContractType Updated", contractTypeRepository.save(contractType),null);
     }
 
     public void upadteContractTypeFieldsValidation(ContractType contractType, UpdateContractTypeDTO objContractType) {

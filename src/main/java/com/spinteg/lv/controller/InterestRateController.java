@@ -21,7 +21,7 @@ public class InterestRateController {
     public ResponseEntity<?> setInterestRate(@RequestBody String rate) {
         InterestRate updatedRate = interestRateService.setInterestRate(rate);
         contractTypeService.updateInterestRateForAllContracts(Float.parseFloat(rate));
-        return ResponseHandler.handleResponseEntity("Interest Rate is updated Successfully ", updatedRate);
+        return ResponseHandler.handleResponseEntity("Interest Rate is updated Successfully ", updatedRate, null);
     }
 
     @GetMapping

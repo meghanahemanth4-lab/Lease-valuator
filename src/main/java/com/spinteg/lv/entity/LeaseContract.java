@@ -29,9 +29,9 @@ public class LeaseContract {
     @Column(name = "customer_id")
     private String customerId;
 
-    @Column(name = "vehicle_no")
-    @Builder.Default
-    private String vehicleNo = null;
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "vehicleNoId", referencedColumnName = "vehicleNoId")
+    private VehicleNo vehicleNo;
 
     @Column(name = "customer_name")
     private String customerName;
