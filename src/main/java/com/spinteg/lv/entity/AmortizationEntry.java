@@ -13,7 +13,13 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "amortization_entry", schema = "contract")
+@Table(
+    name = "amortization_entry",
+    schema = "contract",
+    indexes = {
+        @Index(name = "idx_transaction_date", columnList = "transaction_date")
+    }
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,13 +32,13 @@ public class AmortizationEntry {
     private UUID amortizationEntryId = UUID.randomUUID();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lease_contract", nullable = false) // Specify the foreign key column name
+    @JoinColumn(name = "lease_contract", nullable = false) 
     private LeaseContract leaseContract;
 
     @Column(name = "date")
     private LocalDate date;
 
-    @Column(name="period")
+    @Column(name = "period")
     private Long period;
 
     @Column(name = "installment")
@@ -50,10 +56,10 @@ public class AmortizationEntry {
     @Column(name = "cumulative_installment")
     private Double cumulativeInstallment;
 
-    @Column(name="closing_balance")
+    @Column(name = "closing_balance")
     private Double closingBalance;
 
-    @Column(name="outstanding_balance")
+    @Column(name = "outstanding_balance")
     private Double outstandingBalance;
 
     @Column(name = "interest_component")
@@ -79,4 +85,7 @@ public class AmortizationEntry {
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private LeasePaymentStatus leasePaymentStatus = LeasePaymentStatus.PENDING;
+
+    @Column(name = "transaction_date")
+    private LocalDate transactionDate;
 }

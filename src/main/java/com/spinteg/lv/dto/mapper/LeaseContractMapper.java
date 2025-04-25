@@ -114,6 +114,7 @@ public class LeaseContractMapper {
                 amortizationEntryDto.setPercentageOfPrincipal(
                                 principalComponent / (interestComponent + principalComponent));
                 amortizationEntryDto.setPvOfCf(amortizationEntry.getPvOfCf());
+                amortizationEntryDto.setTransactionDate(amortizationEntry.getTransactionDate());
                 return amortizationEntryDto;
         }
 }

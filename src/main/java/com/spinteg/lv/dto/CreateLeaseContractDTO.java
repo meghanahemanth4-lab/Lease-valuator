@@ -32,8 +32,10 @@ public class CreateLeaseContractDTO {
 
     @NotNull
     private String city;
+    
+    @Builder.Default
     private Integer noOfTimesDeployed = 1;
-
+    
     @Null
     @Builder.Default
     private String vehicleNumber = null;

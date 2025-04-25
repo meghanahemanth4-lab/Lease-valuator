@@ -53,16 +53,16 @@ public class PaymentService {
                 .findByCustomerIdAndContractTypeId(paymentApiDTO.getCustomerNumber(),
                         paymentApiDTO.getContractTypeId());
 
-        // Check if the payment date is valid
-        DataValidation.isValidDate(paymentApiDTO.getDate().toString(), "Payment Date");
+        // Check if the transaction date is valid
+        DataValidation.isValidDate(paymentApiDTO.getTransactionDate().toString(), "Transaction Date");
 
         if (leaseContract != null) {
             List<AmortizationEntry> amortizationEntries = leaseContract.getAmortizationEntries();
-            boolean isPaymentFinished = false;
+            boolean isPaymentProcessed = false;
             for (AmortizationEntry entry : amortizationEntries) {
-                if (entry.getDate().equals(paymentApiDTO.getDate())) {
+                if (entry.getDate().equals(paymentApiDTO.getDate())) { // Match based on the `date` field
                     if (entry.getLeasePaymentStatus().equals(LeasePaymentStatus.PAID)) {
-                        return ResponseEntity.status(400).body("Payment already paid");
+                        return ResponseEntity.status(400).body("Payment already processed for this date");
                     }
 
                     if (entry.getLeasePaymentStatus().equals(LeasePaymentStatus.NO_RENT_DAY)
@@ -71,19 +71,22 @@ public class PaymentService {
                     }
 
                     if (!checkAmountsAreEqual(paymentApiDTO.getPaymentAmount().toString(),
-                            entry.getInstallment().toString()))
-                        return ResponseEntity.status(400).body("Payment amount does not match the installment rent");
+                            entry.getInstallment().toString())) {
+                        return ResponseEntity.status(400).body("Payment amount does not match the installment amount");
+                    }
 
+                    // Update the payment status and transaction date
                     entry.setLeasePaymentStatus(LeasePaymentStatus.PAID);
-                    AmortizationEntry amortizationEntry = amortizationEntryRepository.save(entry);
-                    isPaymentFinished = true;
+                    entry.setTransactionDate(paymentApiDTO.getTransactionDate()); // Use transaction_date from PaymentApiDTO
+                    amortizationEntryRepository.save(entry); // Save the updated entry
+                    isPaymentProcessed = true;
                     break;
                 }
             }
-            if (!isPaymentFinished) {
-                return ResponseEntity.status(400).body("Payment not found");
+            if (!isPaymentProcessed) {
+                return ResponseEntity.status(400).body("No matching amortization entry found for the payment date");
             }
-            return ResponseEntity.ok("Payment status updated successfully");
+            return ResponseEntity.ok("Payment status and transaction date updated successfully");
         } else {
             if (!contractExists(paymentApiDTO.getCustomerNumber())) {
                 throw new DataNotFoundException("Customer not found");
