@@ -30,14 +30,14 @@ jobs:
               "enforce_admins": true,
               "required_pull_request_reviews": {
                 "dismissal_restrictions": {
-                  "users": ["adedayoakande", "spiro-pravin-rathod", "tejasspironet", "spiro-sagar", "abhishekbhilare123", "Vikasn8"],
+                  "users": ["adedayoakande", "spiro-pravin-rathod", "tejasspironet", "spiro-sagar", "abhishekbhilare123", "Vikasn8" , "rajesh8252" , "saipavan05bg"],
                   "teams": []
                 },
                 "dismiss_stale_reviews": true,
                 "require_code_owner_reviews": false,
                 "require_last_push_approval": false,
                 "bypass_pull_request_allowances": {
-                  "users": ["adedayoakande", "spiro-pravin-rathod", "tejasspironet", "spiro-sagar", "abhishekbhilare123", "Vikasn8"],
+                  "users": ["adedayoakande", "spiro-pravin-rathod", "tejasspironet", "spiro-sagar", "abhishekbhilare123", "Vikasn8" , "rajesh8252" , "saipavan05bg"],
                   "teams": []
                 }
               },
