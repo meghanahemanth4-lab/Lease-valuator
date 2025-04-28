@@ -11,5 +11,5 @@ public class PaymentApiDTO
     private String contractTypeId;
     private LocalDate date;
     private Double paymentAmount;
-    private LocalDate trasactionDate;
+    private LocalDate transactionDate;
 }

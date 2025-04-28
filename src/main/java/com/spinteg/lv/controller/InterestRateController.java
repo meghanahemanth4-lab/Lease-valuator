@@ -1,6 +1,6 @@
 package com.spinteg.lv.controller;
 
-import com.spinteg.lv.ExceptionHandling.ResponseHandler;
+import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.entity.InterestRate;
 import com.spinteg.lv.service.InterestRateService;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,7 @@ public class InterestRateController {
     public ResponseEntity<?> setInterestRate(@RequestBody String rate) {
         InterestRate updatedRate = interestRateService.setInterestRate(rate);
         contractTypeService.updateInterestRateForAllContracts(Float.parseFloat(rate));
-        return ResponseHandler.handleResponseEntity("Interest Rate is updated Successfully ", updatedRate);
+        return ResponseHandler.handleResponseEntity("Interest Rate is updated Successfully ", updatedRate, null);
     }
 
     @GetMapping

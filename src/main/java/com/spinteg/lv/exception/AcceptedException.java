@@ -1,4 +1,4 @@
-package com.spinteg.lv.ExceptionHandling;
+package com.spinteg.lv.exception;
 
 public class AcceptedException extends RuntimeException {
     public AcceptedException(String message) {

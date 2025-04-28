@@ -1,12 +1,11 @@
-package com.spinteg.lv.ExceptionHandling;
+package com.spinteg.lv.exception;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 public class ValidationUtil {
 
-    public static boolean checkRequiredFields(Object dto) {
+    public static boolean checkRequiredFields(Object dto, String... notRequiredFields) {
         Field[] fields = dto.getClass().getDeclaredFields();
 
         for (Field field : fields) {
@@ -14,6 +13,9 @@ public class ValidationUtil {
             try {
                 Object value = field.get(dto);
                 if (value == null || value.toString().trim().isEmpty()) {
+                    if (notRequiredFields != null && Arrays.asList(notRequiredFields).contains(field.getName())) {
+                        continue;
+                    }
                     throw new CustomDataMissingException("Field " + field.getName() + " is required");
                 }
             } catch (IllegalAccessException e) {

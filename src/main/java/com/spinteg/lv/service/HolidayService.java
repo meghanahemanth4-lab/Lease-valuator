@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataNotFoundException;
 
 @Service
-public class Holidayservice {
+public class HolidayService {
 
     public List<String> getHolidaysDatesForCountry(String country) {
         List<String> dates = new ArrayList<>();

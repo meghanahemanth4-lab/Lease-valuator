@@ -1,6 +1,8 @@
 package com.spinteg.lv.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -8,7 +10,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
 public class CreateLeaseContractDTO {
 
     @NotNull
@@ -30,6 +32,12 @@ public class CreateLeaseContractDTO {
 
     @NotNull
     private String city;
-    private Integer noOfTimesRedeployed=0;
+    
+    @Builder.Default
+    private Integer noOfTimesDeployed = 1;
+    
+    @Null
+    @Builder.Default
+    private String vehicleNumber = null;
 
 }

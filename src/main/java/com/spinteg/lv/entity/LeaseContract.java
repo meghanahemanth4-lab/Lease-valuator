@@ -29,8 +29,9 @@ public class LeaseContract {
     @Column(name = "customer_id")
     private String customerId;
 
-    @Column(name = "vehicle_no")
-    private String vehicleNo;
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "vehicleNoId", referencedColumnName = "vehicleNoId")
+    private VehicleNo vehicleNo;
 
     @Column(name = "customer_name")
     private String customerName;
@@ -74,8 +75,8 @@ public class LeaseContract {
     @OneToMany(mappedBy = "leaseContract", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<AmortizationEntry> amortizationEntries;
 
-    @Column(name = "number_of_times_redeployed")
-    private Integer noOfTimesRedeployed;
+    @Column(name = "number_of_times_deployed")
+    private Integer noOfTimesDeployed;
 
     @Column(name = "sum_of_pv_of_cf")
     private BigDecimal sumOfPvOfCf;

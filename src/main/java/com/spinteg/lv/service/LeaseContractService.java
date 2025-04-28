@@ -1,15 +1,18 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.ValidationUtil;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.ResponseHandler;
+import com.spinteg.lv.exception.ValidationUtil;
 import com.spinteg.lv.dto.CreateLeaseContractDTO;
 import com.spinteg.lv.entity.ContractType;
 import com.spinteg.lv.entity.Customer;
 import com.spinteg.lv.entity.CustomerContractDraft;
 import com.spinteg.lv.entity.LeaseContract;
+import com.spinteg.lv.entity.VehicleNo;
 import com.spinteg.lv.entity.enums.VehicleStatus;
 import com.spinteg.lv.repository.ContractTypeRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
+import com.spinteg.lv.repository.VehicleRepository;
 import com.spinteg.lv.repository.AmortizationEntryRepository;
 import com.spinteg.lv.repository.CustomerRepository;
 import lombok.AllArgsConstructor;
@@ -19,9 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Service
 @AllArgsConstructor
 public class LeaseContractService {
@@ -30,7 +30,8 @@ public class LeaseContractService {
     private final ContractTypeRepository contractTypeRepository;
     private final AmortizationEntryRepository amortizationEntryRepository;
     private final CustomerRepository customerRepository;
-    private final Holidayservice holidayservice;
+    private final VehicleRepository vehicleRepository;
+    private final HolidayService holidayservice;
 
     public ResponseEntity<?> saveLeaseContract(CreateLeaseContractDTO dto) {
 
@@ -58,10 +59,54 @@ public class LeaseContractService {
         leaseContract.setCountry(dto.getCountry());
         leaseContract.setCity(dto.getCity());
         leaseContract.setVehicleStatus(VehicleStatus.valueOf(dto.getVehicleStatus()));
-        leaseContract.setNoOfTimesRedeployed(dto.getNoOfTimesRedeployed());
+        // we have to remove the field because of duplicate field in entity
+        leaseContract.setNoOfTimesDeployed(dto.getNoOfTimesDeployed());
         leaseContract.setCustomerName(dto.getCustomerName());
         leaseContract.setCustomerNumber(dto.getCustomerNumber());
         leaseContract.setContractType(contractType);
+
+        List<VehicleNo> vehicleNoObjs = (List<VehicleNo>) vehicleRepository.findByVehicleNo(dto.getVehicleNumber());
+        VehicleNo vehicleNoObj = vehicleNoObjs.isEmpty() ? null : vehicleNoObjs.get(0);
+
+        VehicleNo vehicleNoObjNew = new VehicleNo();
+
+        String warningMessage = null;
+        if (vehicleNoObj != null && Boolean.TRUE.equals(vehicleNoObj.isDeployed())) {
+            vehicleNoObjNew.setVehicleNo(vehicleNoObj.getVehicleNo());
+            vehicleNoObjNew.setDeployed(vehicleNoObj.isDeployed());
+            vehicleNoObjNew.setNoOfTimesDeployed(vehicleNoObj.getNoOfTimesDeployed());
+            warningMessage = "The Vehicle is already deployed.Please enter a different Vehicle Number";
+        } else if (vehicleNoObj != null && Boolean.FALSE.equals(vehicleNoObj.isDeployed())) {
+
+            vehicleNoObjNew.setVehicleNo(dto.getVehicleNumber());
+            vehicleNoObjNew.setDeployed(true);
+            vehicleNoObjNew.setNoOfTimesDeployed(vehicleNoObj.getNoOfTimesDeployed() + 1);
+
+            List<LeaseContract> existingLeaseContract = leaseContractRepository
+                    .findByVehicleNo(vehicleNoObj);
+
+            if (existingLeaseContract != null) {
+                for (LeaseContract existingLease : existingLeaseContract) {
+                    VehicleNo existingVehicleNo = existingLease.getVehicleNo();
+                    if (existingVehicleNo != null && Boolean.FALSE.equals(existingVehicleNo.isDeployed())) {
+                        existingVehicleNo.setVehicleNo(null);
+                        existingVehicleNo.setDeployed(false);
+                        existingVehicleNo.setNoOfTimesDeployed(0);
+                        existingLease.setVehicleNo(existingVehicleNo);
+
+                    }
+                }
+                leaseContractRepository.saveAll(existingLeaseContract);
+            }
+        } else {
+            vehicleNoObjNew = VehicleNo.builder()
+                    .vehicleNo(dto.getVehicleNumber())
+                    .noOfTimesDeployed(1)
+                    .isDeployed(true)
+                    .build();
+        }
+
+        leaseContract.setVehicleNo(vehicleNoObjNew);
 
         List<String> holidaysList = holidayservice.getHolidaysDatesForCountry(dto.getCountry());
 
@@ -74,7 +119,10 @@ public class LeaseContractService {
         saveLeaseCustomerDetails(dto);
         leaseContractRepository.save(leaseContract);
         amortizationEntryRepository.saveAll(generator.generateAmortizationSchedule(leaseContract, holidaysList));
-        return ResponseEntity.ok(leaseContract);
+
+        return ResponseHandler.handleResponseEntity("Lease Contract Created Successfully", leaseContract,
+                warningMessage);
+
     }
 
     public Customer saveLeaseCustomerDetails(CreateLeaseContractDTO dto) {
@@ -89,7 +137,7 @@ public class LeaseContractService {
                     CustomerContractDraft.builder()
                             .startDate(dto.getStartDate())
                             .contractTypeId(dto.getContractTypeId()).build());
-            customer.setLeaseContract(false);
+            customer.setLeaseContract(true);
             return customerRepository.saveAndFlush(customer);
         } else {
             Customer customer = Customer.builder()
@@ -112,9 +160,7 @@ public class LeaseContractService {
     }
 
     public boolean checkRequiredFields(CreateLeaseContractDTO dto) {
-        boolean isVaild = ValidationUtil.checkRequiredFields(dto);
-
+        boolean isVaild = ValidationUtil.checkRequiredFields(dto, "vehicleNumber");
         return isVaild;
     }
-
 }

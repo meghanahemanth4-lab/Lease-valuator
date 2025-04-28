@@ -1,7 +1,7 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataNotFoundException;
 import com.spinteg.lv.entity.InterestRate;
 import com.spinteg.lv.repository.InterestRateRepository;
 import lombok.AllArgsConstructor;

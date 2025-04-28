@@ -1,36 +1,34 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.AcceptedException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
-import com.spinteg.lv.ExceptionHandling.DataValidation;
-import com.spinteg.lv.controller.ContractTypeController;
+import com.spinteg.lv.exception.AcceptedException;
 import com.spinteg.lv.dto.DownpaymentDTO;
 import com.spinteg.lv.dto.PaymentApiDTO;
 import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.Customer;
 import com.spinteg.lv.entity.Downpayment;
 import com.spinteg.lv.entity.LeaseContract;
-import com.spinteg.lv.entity.enums.Deployment;
 import com.spinteg.lv.entity.enums.LeasePaymentStatus;
 import com.spinteg.lv.entity.enums.VehicleType;
+import com.spinteg.lv.exception.DataNotFoundException;
+import com.spinteg.lv.exception.DataValidation;
 import com.spinteg.lv.repository.AmortizationEntryRepository;
 import com.spinteg.lv.repository.ContractTypeRepository;
 import com.spinteg.lv.repository.CustomerRepository;
 import com.spinteg.lv.repository.DownPaymentRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.spinteg.lv.repository.*;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
-import java.rmi.dgc.Lease;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-import javax.xml.crypto.Data;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,16 +54,16 @@ public class PaymentService {
                 .findByCustomerIdAndContractTypeId(paymentApiDTO.getCustomerNumber(),
                         paymentApiDTO.getContractTypeId());
 
-        // Check if the payment date is valid
-        DataValidation.isValidDate(paymentApiDTO.getDate().toString(), "Payment Date");
+        // Check if the transaction date is valid
+        DataValidation.isValidDate(paymentApiDTO.getTransactionDate().toString(), "Transaction Date");
 
         if (leaseContract != null) {
             List<AmortizationEntry> amortizationEntries = leaseContract.getAmortizationEntries();
-            boolean isPaymentFinished = false;
+            boolean isPaymentProcessed = false;
             for (AmortizationEntry entry : amortizationEntries) {
-                if (entry.getDate().equals(paymentApiDTO.getDate())) {
+                if (entry.getDate().equals(paymentApiDTO.getDate())) { // Match based on the `date` field
                     if (entry.getLeasePaymentStatus().equals(LeasePaymentStatus.PAID)) {
-                        return ResponseEntity.status(400).body("Payment already paid");
+                        return ResponseEntity.status(400).body("Payment already processed for this date");
                     }
 
                     if (entry.getLeasePaymentStatus().equals(LeasePaymentStatus.NO_RENT_DAY)
@@ -73,20 +71,26 @@ public class PaymentService {
                         return ResponseEntity.status(400).body("No rent day");
                     }
 
-                    if (checkAmountareEqual(paymentApiDTO.getPaymentAmount().toString(),
-                            entry.getInstallment().toString()) == false)
-                        return ResponseEntity.status(400).body("Payment amount does not match the installment rent");
+                    if (!checkAmountsAreEqual(paymentApiDTO.getPaymentAmount().toString(),
+                            entry.getInstallment().toString())) {
+                        return ResponseEntity.status(400).body("Payment amount does not match the installment amount");
+                    }
 
+                    // Update the payment status and transaction date
                     entry.setLeasePaymentStatus(LeasePaymentStatus.PAID);
-                    AmortizationEntry amortizationEntry = amortizationEntryRepository.save(entry);
-                    isPaymentFinished = true;
+                    // entry.setTransactionDate(LocalDate.now());
+                    entry.setTransactionDate(LocalDate.parse(paymentApiDTO.getTransactionDate().toString()));
+
+                    amortizationEntryRepository.save(entry);
+
+                    isPaymentProcessed = true;
                     break;
                 }
             }
-            if (!isPaymentFinished) {
-                return ResponseEntity.status(400).body("Payment not found");
+            if (!isPaymentProcessed) {
+                return ResponseEntity.status(400).body("No matching amortization entry found for the payment date");
             }
-            return ResponseEntity.ok("Payment status updated successfully");
+            return ResponseEntity.ok("Payment status and transaction date updated successfully");
         } else {
             if (!contractExists(paymentApiDTO.getCustomerNumber())) {
                 throw new DataNotFoundException("Customer not found");
@@ -110,7 +114,7 @@ public class PaymentService {
         return !contractTypeRepository.findByContractTypeId(contractTypeId).isEmpty();
     }
 
-    private boolean checkAmountareEqual(String paymentAmount, String leaseRent) {
+    private static boolean checkAmountsAreEqual(String paymentAmount, String leaseRent) {
         String amount = DataValidation.isNotNegativeAndZero(paymentAmount, "Payment Amount");
         return Double.valueOf(amount).equals((Double.valueOf(leaseRent.trim())));
     }
@@ -136,7 +140,7 @@ public class PaymentService {
             DataValidation.isNotNegativeAndZero(downpaymentDTO.getPaymentAmount().toString(), "Payment Amount");
 
             // Check if the payment amount is equal to the downpayment
-            if (checkAmountareEqual(downpaymentDTO.getPaymentAmount().toString(),
+            if (checkAmountsAreEqual(downpaymentDTO.getPaymentAmount().toString(),
                     String.valueOf(leaseContract.getContractType().getDownpayment())) == false)
                 return ResponseEntity.status(400).body("Payment amount does not match the downpayment");
 
@@ -185,7 +189,7 @@ public class PaymentService {
             DataValidation.isNotNegativeAndZero(downpaymentDTO.getPaymentAmount().toString(), "Payment Amount");
 
             // Check if the payment amount is equal to the downpayment
-            if (checkAmountareEqual(downpaymentDTO.getPaymentAmount().toString(),
+            if (checkAmountsAreEqual(downpaymentDTO.getPaymentAmount().toString(),
                     String.valueOf(leaseContract.getContractType().getDownpayment())) == false)
                 return ResponseEntity.status(400).body("Payment amount does not match the downpayment");
 
@@ -204,14 +208,13 @@ public class PaymentService {
 
             // LeaseContract contract = leaseContractRepository.save(leaseContract);
             Downpayment downpayObj = downPaymentRepository.save(obj);
-            if (downpayObj != null) {
-                return ResponseEntity.ok("Payment status updated successfully");
-            }
+            return ResponseEntity.ok("Payment status updated successfully");
 
         } else {
             if (!contractTypeExists(downpaymentDTO.getContractTypeId())) {
                 throw new DataNotFoundException("Contract Type not found");
             }
+            val contractType = contractTypeRepository.findByContractTypeId(downpaymentDTO.getContractTypeId()).get();
             Downpayment downpayment = new Downpayment();
             if (customerExists(downpaymentDTO.getCustomerNumber())) {
 
@@ -224,8 +227,8 @@ public class PaymentService {
                     downpayment.setContractTypeId(customer.get().getCustomerContractDraft().getContractTypeId());
                     downpayment.setPaymentAmount(BigDecimal.valueOf(downpaymentDTO.getPaymentAmount()));
                     downpayment.setTransactionDate(Date.valueOf(downpaymentDTO.getTransactionDate()));
-                    downpayment.setVehicleType(VehicleType.valueOf(downpaymentDTO.getVehicleType()));
-                    downpayment.setDeployment(Deployment.valueOf(downpaymentDTO.getDeployment()));
+                    downpayment.setVehicleType(contractType.getTypeOfVehicle());
+                    downpayment.setDeployment(contractType.getDeployment());
                     downPaymentRepository.save(downpayment);
                     // System.out.println("Downpayment request is accepted");
                     return ResponseEntity.ok("Payment status updated successfully");
@@ -238,8 +241,8 @@ public class PaymentService {
             downpayment.setCustomerCode(downpaymentDTO.getCustomerNumber());
             downpayment.setPaymentAmount(BigDecimal.valueOf(downpaymentDTO.getPaymentAmount()));
             downpayment.setTransactionDate(Date.valueOf(downpaymentDTO.getTransactionDate()));
-            downpayment.setVehicleType(VehicleType.valueOf(downpaymentDTO.getVehicleType()));
-            downpayment.setDeployment(Deployment.valueOf(downpaymentDTO.getDeployment()));
+            downpayment.setVehicleType(contractType.getTypeOfVehicle());
+            downpayment.setDeployment(contractType.getDeployment());
             Downpayment downpaymentObj = downPaymentRepository.save(downpayment);
             if (downpaymentObj != null) {
                 throw new AcceptedException("Customer is not found.But Downpayment request is accepted");

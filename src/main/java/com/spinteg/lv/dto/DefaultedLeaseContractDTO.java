@@ -26,6 +26,6 @@ public class DefaultedLeaseContractDTO {
     LocalDate startDate;
     LocalDate lastDefaultedDate;
     Integer numberOfNoRentDay;
-    Integer noOfTimesRedeployed;
+    Integer noOfTimesDeployed;
     BigDecimal grossDebtor;
 }

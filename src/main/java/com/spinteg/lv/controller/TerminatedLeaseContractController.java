@@ -37,7 +37,6 @@ public class TerminatedLeaseContractController {
 
     @GetMapping("/all/{id}")
     public List<TerminatedLeaseContractDTO> getContractById(@PathVariable UUID id) {
-        System.out.println(id);
         return leaseContractRepository.findById(id).stream()
                 .map(TerminatedLeaseContractMapper::toTerminatedLeaseContractDTO).toList();
     }

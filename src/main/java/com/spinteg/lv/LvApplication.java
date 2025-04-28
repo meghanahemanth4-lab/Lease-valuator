@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.spinteg.lv.ExceptionHandling.GlobalExceptionHandler;
+import com.spinteg.lv.exception.GlobalExceptionHandler;
 
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 @EnableScheduling

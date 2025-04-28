@@ -1,9 +1,9 @@
 package com.spinteg.lv.service;
 
-import com.spinteg.lv.ExceptionHandling.CustomDataMissingException;
-import com.spinteg.lv.ExceptionHandling.DataNotFoundException;
-import com.spinteg.lv.ExceptionHandling.DataValidation;
-import com.spinteg.lv.ExceptionHandling.ResponseHandler;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataNotFoundException;
+import com.spinteg.lv.exception.DataValidation;
+import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.dto.CreateContractTypeDTO;
 import com.spinteg.lv.dto.UpdateContractTypeDTO;
 import com.spinteg.lv.entity.ContractType;
@@ -84,7 +84,7 @@ public class ContractTypeService {
                         DataValidation.isNumeric(createContractTypeDTO.getInstallment(), "Installment"),
                         "Installment")));
         contractTypeRepository.save(contractType);
-        return ResponseHandler.handleResponseEntity("ContractType Created", contractType);
+        return ResponseHandler.handleResponseEntity("ContractType Created", contractType,null);
     }
 
     public List<ContractType> getALlContractTypes() {
@@ -120,7 +120,7 @@ public class ContractTypeService {
 
         // Checking validation for the fields
         upadteContractTypeFieldsValidation(contractType, objContractType);
-        return ResponseHandler.handleResponseEntity("ContractType Updated", contractTypeRepository.save(contractType));
+        return ResponseHandler.handleResponseEntity("ContractType Updated", contractTypeRepository.save(contractType),null);
     }
 
     public void upadteContractTypeFieldsValidation(ContractType contractType, UpdateContractTypeDTO objContractType) {
