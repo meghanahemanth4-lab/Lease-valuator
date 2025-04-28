@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class AccountingEntryUpdate {
-    private int month;
-    private int year;
+    private Integer month;
+    private Integer year;
     private Deployment deployment;
     private String vehicleType;
     

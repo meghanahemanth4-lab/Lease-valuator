@@ -227,8 +227,8 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
       ON lc.contract_type_id = ct.contract_type_id
       WHERE ct.deployment = CAST(:deployment AS contract.deployment)
       AND ct.type_of_vehicle = CAST(:vehicleType AS contract.vehicle_type)
-      AND EXTRACT(MONTH FROM ae.transaction_date) = :month
-      AND EXTRACT(YEAR FROM ae.transaction_date) = :year
+      AND EXTRACT(MONTH FROM lc.transaction_date) = :month
+      AND EXTRACT(YEAR FROM lc.transaction_date) = :year
       """, nativeQuery = true)
   Float sumofDownpaymentReceivedByDeploymentAndVsehicleTypeAndMonthAndYear(
       String deployment,
