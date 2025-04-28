@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,7 +24,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @CrossOrigin
 public class LeaseDailyScheduleController {
-    
+
     private final LeaseContractRepository leaseContractRepository;
     private final AmortizationEntryUpdateService amortizationEntryUpdateService;
 
@@ -34,9 +35,10 @@ public class LeaseDailyScheduleController {
     }
 
     @PostMapping("update-status/")
-    public ResponseEntity updateAmortizationStatus(
+    public ResponseEntity<?> updateAmortizationStatus(
             @RequestBody AmortizationEntryUpdateDTO amortizationEntryUpdateDTO) {
-        if (amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntryUpdateDTO.getAmortizationEntryId(), amortizationEntryUpdateDTO.getStatus())) {
+        if (amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntryUpdateDTO.getAmortizationEntryId(),
+                amortizationEntryUpdateDTO.getStatus(), amortizationEntryUpdateDTO.getTransactionDate())) {
             amortizationEntryUpdateService.updateOtherAmortizationEntries(amortizationEntryUpdateDTO);
             return ResponseEntity.ok().build();
         }
@@ -45,17 +47,21 @@ public class LeaseDailyScheduleController {
 
     @PostMapping("update-status/terminate")
     public ResponseEntity<?> updatePaymentStatus(@RequestBody TerminateLeaseDTO terminateLeaseDTO) {
-        LeaseContract leaseContract = leaseContractRepository.findByCustomerIdAndContractTypeId(terminateLeaseDTO.getCustomerNumber(), terminateLeaseDTO.getContractTypeId());
-        AmortizationEntry amortizationEntry = leaseContract.getAmortizationEntries().stream().filter(entry -> terminateLeaseDTO.getDate().equals(entry.getDate())).findFirst().get();
-        amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntry.getAmortizationEntryId(), LeasePaymentStatus.TERMINATED);
+        LeaseContract leaseContract = leaseContractRepository.findByCustomerIdAndContractTypeId(
+                terminateLeaseDTO.getCustomerNumber(), terminateLeaseDTO.getContractTypeId());
+        AmortizationEntry amortizationEntry = leaseContract.getAmortizationEntries().stream()
+                .filter(entry -> terminateLeaseDTO.getDate().equals(entry.getDate())).findFirst().get();
+        amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntry.getAmortizationEntryId(),
+                LeasePaymentStatus.TERMINATED, amortizationEntry.getTransactionDate());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("update-status/bulk/")
-    public ResponseEntity updateAmortizationStatusBulk(
+    public ResponseEntity<?> updateAmortizationStatusBulk(
             @RequestBody List<AmortizationEntryUpdateDTO> amortizationEntryUpdateDTOList) {
         for (AmortizationEntryUpdateDTO amortizationEntry : amortizationEntryUpdateDTOList) {
-            if (!amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntry.getAmortizationEntryId(), amortizationEntry.getStatus())) {
+            if (!amortizationEntryUpdateService.updateAmortizationEntry(amortizationEntry.getAmortizationEntryId(),
+                    amortizationEntry.getStatus(), amortizationEntry.getTransactionDate())) {
                 return ResponseEntity.unprocessableEntity().build();
             }
         }

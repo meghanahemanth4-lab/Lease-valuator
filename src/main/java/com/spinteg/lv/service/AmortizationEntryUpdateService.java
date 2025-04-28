@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.val;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,13 +22,15 @@ public class AmortizationEntryUpdateService {
         private final AmortizationEntryRepository amortizationEntryRepository;
         private final LeaseContractRepository leaseContractRepository;
 
-        public boolean updateAmortizationEntry(UUID amortizationEntryId, LeasePaymentStatus status) {
+        public boolean updateAmortizationEntry(UUID amortizationEntryId, LeasePaymentStatus status,
+                        LocalDate entryDate) {
                 Optional<AmortizationEntry> amortizationEntry = amortizationEntryRepository
                                 .findById(amortizationEntryId);
                 if (amortizationEntry.isPresent()) {
                         val amortizationEntryToUpdate = amortizationEntry.get();
                         val statusBeforeUpdate = amortizationEntryToUpdate.getLeasePaymentStatus();
                         amortizationEntryToUpdate.setLeasePaymentStatus(status);
+                        amortizationEntryToUpdate.setTransactionDate(entryDate);
                         amortizationEntryRepository.saveAndFlush(amortizationEntryToUpdate);
 
                         if (statusBeforeUpdate.equals(LeasePaymentStatus.DEFAULTED)

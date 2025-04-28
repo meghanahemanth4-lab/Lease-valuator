@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,8 +78,11 @@ public class PaymentService {
 
                     // Update the payment status and transaction date
                     entry.setLeasePaymentStatus(LeasePaymentStatus.PAID);
-                    entry.setTransactionDate(paymentApiDTO.getTransactionDate()); // Use transaction_date from PaymentApiDTO
-                    amortizationEntryRepository.save(entry); // Save the updated entry
+                    // entry.setTransactionDate(LocalDate.now());
+                    entry.setTransactionDate(LocalDate.parse(paymentApiDTO.getTransactionDate().toString()));
+
+                    amortizationEntryRepository.save(entry);
+
                     isPaymentProcessed = true;
                     break;
                 }
