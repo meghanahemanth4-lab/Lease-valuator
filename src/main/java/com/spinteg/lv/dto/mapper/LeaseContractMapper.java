@@ -58,7 +58,12 @@ public class LeaseContractMapper {
                 // Mapping LeaseContract fields
                 leaseContractWithAmortizationDTO.setContractNo(leaseContract.getContractNo());
                 leaseContractWithAmortizationDTO.setCustomerId(leaseContract.getCustomerId());
-                leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
+                try{
+                        leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
+                }
+                catch (Exception e) {
+                        leaseContractWithAmortizationDTO.setVehicleNo("null");
+                }
                 leaseContractWithAmortizationDTO.setCustomerName(leaseContract.getCustomerName());
                 leaseContractWithAmortizationDTO.setCustomerNumber(leaseContract.getCustomerNumber());
                 leaseContractWithAmortizationDTO.setStartDate(leaseContract.getStartDate());
