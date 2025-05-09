@@ -30,7 +30,11 @@ public class ActiveLeaseMapper {
                 dto.setCustomerId(leaseContract.getCustomerId());
                 dto.setCustomerName(leaseContract.getCustomerName());
                 dto.setVehicleType(leaseContract.getContractType().getTypeOfVehicle());
-                dto.setVehicleNumber(leaseContract.getVehicleNo().getVehicleNo());
+                try {
+                        dto.setVehicleNumber(leaseContract.getVehicleNo().getVehicleNo());
+                } catch (Exception e) {
+                        dto.setVehicleNumber("null");
+                }
                 dto.setStartDate(leaseContract.getStartDate());
                 dto.setEndDate(leaseContract.getEndDate());
                 dto.setDeployment(leaseContract.getContractType().getDeployment());
