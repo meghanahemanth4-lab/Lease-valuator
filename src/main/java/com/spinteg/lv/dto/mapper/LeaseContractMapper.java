@@ -32,10 +32,18 @@ public class LeaseContractMapper {
         }
 
         public static LeaseContractDTO toLeaseContractDTO(LeaseContract leaseContract) {
+                String vehicleNo = null;
+                Integer noOfTimesDeployed = 0;
+
+                if (leaseContract.getVehicleNo() != null) {
+                        vehicleNo = leaseContract.getVehicleNo().getVehicleNo();
+                        noOfTimesDeployed = leaseContract.getVehicleNo().getNoOfTimesDeployed();
+                }
+
                 return LeaseContractDTO.builder()
                                 .contractNo(leaseContract.getContractNo())
                                 .customerNumber(leaseContract.getCustomerId())
-                                .vehicleNo(leaseContract.getVehicleNo().getVehicleNo())
+                                .vehicleNo(vehicleNo)
                                 .customerName(leaseContract.getCustomerName())
                                 .leaseContractStatus(leaseContract.getStatus())
                                 .startDate(leaseContract.getStartDate())
@@ -46,7 +54,7 @@ public class LeaseContractMapper {
                                 .country(leaseContract.getCountry())
                                 .contractTypeDTO(toContractTypeDTO(leaseContract.getContractType()))
                                 .vehicleStatus(leaseContract.getVehicleStatus())
-                                .noOfTimesDeployed(leaseContract.getVehicleNo().getNoOfTimesDeployed())
+                                .noOfTimesDeployed(noOfTimesDeployed)
                                 .sumOfPvOfCf(leaseContract.getSumOfPvOfCf())
                                 .build();
         }
@@ -58,10 +66,9 @@ public class LeaseContractMapper {
                 // Mapping LeaseContract fields
                 leaseContractWithAmortizationDTO.setContractNo(leaseContract.getContractNo());
                 leaseContractWithAmortizationDTO.setCustomerId(leaseContract.getCustomerId());
-                try{
+                try {
                         leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                         leaseContractWithAmortizationDTO.setVehicleNo("null");
                 }
                 leaseContractWithAmortizationDTO.setCustomerName(leaseContract.getCustomerName());
