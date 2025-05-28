@@ -5,13 +5,20 @@ import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.LeaseContract;
 import com.spinteg.lv.entity.enums.LeaseContractStatus;
 import com.spinteg.lv.entity.enums.LeasePaymentStatus;
+import com.spinteg.lv.exception.CustomDataMissingException;
+import com.spinteg.lv.exception.DataValidation;
 import com.spinteg.lv.repository.AmortizationEntryRepository;
 import com.spinteg.lv.repository.LeaseContractRepository;
 import lombok.AllArgsConstructor;
 import lombok.val;
-import org.springframework.stereotype.Service;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +26,7 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 public class AmortizationEntryUpdateService {
+        private final HolidayService holidayService;
         private final AmortizationEntryRepository amortizationEntryRepository;
         private final LeaseContractRepository leaseContractRepository;
 
@@ -72,11 +80,13 @@ public class AmortizationEntryUpdateService {
 
         private void updateLeaseStatusIfRequired(LeasePaymentStatus leasePaymentStatus,
                         LeaseContractStatus leaseContractStatus, LeaseContract leaseContract) {
+
                 if (LeasePaymentStatus.TERMINATED.equals(leasePaymentStatus)
                                 && !LeaseContractStatus.TERMINATED.equals(leaseContractStatus)) {
                         leaseContract.setStatus(LeaseContractStatus.TERMINATED);
                         leaseContract.getVehicleNo().setDeployed(false);
                         leaseContractRepository.saveAndFlush(leaseContract);
+
                 } else if (LeasePaymentStatus.DEFAULTED.equals(leasePaymentStatus)
                                 && (!LeaseContractStatus.DEFAULTED.equals(leaseContractStatus)
                                                 && !LeaseContractStatus.TERMINATED.equals(leaseContractStatus))) {
@@ -125,4 +135,254 @@ public class AmortizationEntryUpdateService {
                 }
         }
 
+        public ResponseEntity<?> updateAmortizationEntryToNoRentDay(LocalDate date) {
+
+                DataValidation.isValidDate(date.toString(), "Date");
+
+                if (date.isBefore(LocalDate.now()))
+                        throw new CustomDataMissingException("It cannot be applied to no-rent day");
+
+                List<LeaseContract> leaseContracts = leaseContractRepository.findByStatus(LeaseContractStatus.ACTIVE);
+
+                for (LeaseContract contract : leaseContracts) {
+                        changeToNoRentDay(date, contract);
+                }
+                return ResponseEntity.ok().body("No rent day is updated successfully");
+        }
+
+        public void changeToNoRentDay(LocalDate date, LeaseContract contract) {
+
+                List<AmortizationEntry> amortizationEntries = contract.getAmortizationEntries();
+                List<String> holidaysList = holidayService.getHolidaysDatesForCountry(contract.getCountry());
+                if (amortizationEntries.isEmpty()) {
+                        return;
+                }
+
+                AmortizationEntry entryForDate = amortizationEntries.stream()
+                                .filter(amortizationEntry -> amortizationEntry.getDate().isEqual(date))
+                                .findFirst()
+                                .orElse(null);
+
+                if (entryForDate == null) {
+                        return;
+                }
+
+                LeasePaymentStatus contractStatus = entryForDate.getLeasePaymentStatus();
+                if (contractStatus == LeasePaymentStatus.NO_RENT_DAY_FUTURE
+                                || contractStatus == LeasePaymentStatus.NO_RENT_DAY) {
+                        return;
+                }
+
+                handleNoRentDay(amortizationEntries, date, contract, holidaysList);
+
+        }
+
+        @Transactional
+        private void handleNoRentDay(List<AmortizationEntry> entries, LocalDate targetDate,
+                        LeaseContract contract, List<String> holidays) {
+
+                AmortizationEntry targetEntry = null;
+                boolean created = false;
+                AmortizationEntry previousEntry = null;
+                for (AmortizationEntry entry : new ArrayList<>(entries)) 
+                {
+                        previousEntry = entry;
+                        if (!created && entry.getDate().isEqual(targetDate)) {
+
+                                targetEntry = entry;
+
+                                AmortizationEntry noRentEntryFirst = noRentEntryCalculationForFirstNoRentDay(entry,
+                                                contract,
+                                                targetDate,
+                                                entry.getPeriod(), previousEntry);
+
+                                // contract.getAmortizationEntries().remove(entry);
+                                // amortizationEntryRepository.deleteById(entry.getAmortizationEntryId());
+                                contract.getAmortizationEntries().remove(entry); // remove from parent
+                                entry.setLeaseContract(null); // optional but helps clarify disassociation
+                                amortizationEntryRepository.delete(entry);
+                                amortizationEntryRepository.flush();
+
+                                amortizationEntryRepository.save(noRentEntryFirst);
+                                created = true;
+                                continue;
+                        }
+
+                        else if (created && targetEntry != null) {
+
+                                adjustEntryValues(entry, targetEntry);
+
+                                if (entry.getDate().isEqual(contract.getEndDate())) {
+
+                                        LocalDate checkDate = contract.getEndDate().plusDays(1);
+                                        AmortizationEntry lastEntry = entry;
+
+                                        while (checkIfWeekendOrHoliday(checkDate, holidays)) {
+                                                AmortizationEntry noRentEntry = noRentEntryCalculation(lastEntry,
+                                                                contract,
+                                                                checkDate, lastEntry.getPeriod() + 1);
+                                                // contract.getAmortizationEntries().add(noRentEntry);
+                                                lastEntry = amortizationEntryRepository.save(noRentEntry);
+                                                checkDate = checkDate.plusDays(1);
+                                        }
+
+                                        AmortizationEntry finalEntry = penndingEntryCalculation(contract, targetEntry,
+                                                        lastEntry, lastEntry.getPeriod() + 1);
+                                        contract.setEndDate(finalEntry.getDate());
+                                        amortizationEntryRepository.save(finalEntry);
+                                        leaseContractRepository.save(contract);
+                                        leaseContractRepository.flush();
+                                }
+                        }
+                }
+                
+                amortizationEntryRepository.flush();
+
+        }
+
+        private AmortizationEntry penndingEntryCalculation(LeaseContract contract, AmortizationEntry originalEntry,
+                        AmortizationEntry lastEntry, long period) {
+                AmortizationEntry amortizationEntry = AmortizationEntry.builder()
+                                .leaseContract(contract)
+                                .date(lastEntry.getDate().plusDays(1))
+                                .period(period)
+                                .installment(originalEntry.getInstallment())
+                                .insurance(originalEntry.getInsurance())
+                                .maintenance(originalEntry.getMaintenance())
+
+                                .principalComponent(originalEntry.getPrincipalComponent())
+                                .cumulativePrincipal(lastEntry.getCumulativePrincipal()
+                                                + originalEntry.getPrincipalComponent())
+
+                                .baseRent(originalEntry.getBaseRent())
+                                .cumulativeInstallment(
+                                                lastEntry.getCumulativeInstallment() + originalEntry.getBaseRent())
+
+                                .interestComponent(lastEntry.getInterestComponent())
+                                .cumulativeInterest(
+                                                lastEntry.getCumulativeInterest()
+                                                                + lastEntry.getInterestComponent())
+                                // .closingBalance(lastEntry.getClosingBalance())
+
+                                .leasePaymentStatus(LeasePaymentStatus.PENDING)
+                                .remainingAmount(lastEntry.getRemainingAmount())
+                                .pvOfCf(originalEntry.getPvOfCf())
+                                .build();
+                return amortizationEntry;
+        }
+
+        private AmortizationEntry noRentEntryCalculationForFirstNoRentDay(AmortizationEntry originalEntry,
+                        LeaseContract contract,
+                        LocalDate targetDate, Long period, AmortizationEntry previousEntry) {
+                // Create placeholder No-Rent Day entry
+                AmortizationEntry noRentEntry = AmortizationEntry.builder()
+                                .leaseContract(contract)
+                                .date(targetDate)
+                                .period(period)
+                                .installment(originalEntry.getInstallment())
+                                .baseRent(0.0)
+                                .insurance(originalEntry.getInsurance())
+                                .maintenance(originalEntry.getMaintenance())
+                                .interestComponent(originalEntry.getInterestComponent())
+                                .closingBalance(originalEntry.getClosingBalance())
+                                .cumulativeInstallment(
+                                                originalEntry.getCumulativeInstallment())
+                                .cumulativeInterest(originalEntry.getCumulativeInterest())
+                                .leasePaymentStatus(LeasePaymentStatus.NO_RENT_DAY)
+                                .cumulativePrincipal(originalEntry.getCumulativePrincipal()
+                                                - originalEntry.getPrincipalComponent())
+                                .principalComponent(0.0)
+                                .remainingAmount(originalEntry.getRemainingAmount())
+                                .pvOfCf(0.0)
+                                .build();
+                return noRentEntry;
+        }
+
+        private AmortizationEntry noRentEntryCalculation(AmortizationEntry originalEntry, LeaseContract contract,
+                        LocalDate targetDate, Long period) {
+                // Create placeholder No-Rent Day entry
+                AmortizationEntry noRentEntry = AmortizationEntry.builder()
+                                .leaseContract(contract)
+                                .date(targetDate)
+                                .period(period)
+                                .installment(originalEntry.getInstallment())
+                                .baseRent(0.0)
+                                .insurance(originalEntry.getInsurance())
+                                .maintenance(originalEntry.getMaintenance())
+                                .interestComponent(originalEntry.getInterestComponent())
+                                .cumulativePrincipal(originalEntry.getCumulativePrincipal())
+                                .cumulativeInstallment(
+                                                originalEntry.getCumulativeInstallment() + originalEntry.getBaseRent())
+                                .cumulativeInterest(originalEntry.getCumulativeInterest()
+                                                + originalEntry.getInterestComponent())
+                                .closingBalance(originalEntry.getClosingBalance())
+                                .principalComponent(0.0)
+                                .leasePaymentStatus(LeasePaymentStatus.NO_RENT_DAY)
+                                .remainingAmount(originalEntry.getRemainingAmount())
+                                .pvOfCf(0.0)
+                                .build();
+                return noRentEntry;
+        }
+
+        // private AmortizationEntry
+        // createExtraAmortizationEntry(List<AmortizationEntry> entries,
+        // LocalDate baseDate,
+        // LeaseContract contract,
+        // List<String> holidays,
+        // AmortizationEntry baseEntry,
+        // AmortizationEntry lastEntry) {
+
+        // LocalDate newDate = entries.stream()
+        // .map(AmortizationEntry::getDate)
+        // .max(LocalDate::compareTo)
+        // .orElse(baseDate)
+        // .plusDays(1);
+
+        // // Skip weekends/holidays
+        // while (checkIfWeekendOrHoliday(newDate, holidays) ||
+        // newDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+        // newDate = newDate.plusDays(1);
+        // }
+
+        // newDate = newDate.plusDays(1); // Move to the next date after holiday/weekend
+
+        // return AmortizationEntry.builder()
+        // .leaseContract(contract)
+        // .date(newDate)
+        // .period(ChronoUnit.DAYS.between(newDate, baseDate) > 0
+        // ? ChronoUnit.DAYS.between(newDate, baseDate)
+        // : -(ChronoUnit.DAYS.between(newDate, baseDate)))
+        // .installment(Double.valueOf(contract.getContractType().getInstallment()))
+        // .baseRent(Double.valueOf(contract.getContractType().getBaseRent()))
+        // .insurance(Double.valueOf(contract.getContractType().getInsuranceAmount()))
+        // .maintenance(Double.valueOf(contract.getContractType().getMaintenanceAmount()))
+        // .interestComponent(baseEntry.getInterestComponent())
+        // .principalComponent(baseEntry.getPrincipalComponent())
+        // .cumulativePrincipal(
+        // lastEntry.getCumulativePrincipal() + baseEntry.getCumulativePrincipal())
+        // .cumulativeInstallment(lastEntry.getCumulativeInstallment()
+        // + baseEntry.getCumulativeInstallment())
+        // .cumulativeInterest(
+        // lastEntry.getCumulativeInterest() + baseEntry.getCumulativeInterest())
+        // .closingBalance(lastEntry.getClosingBalance() +
+        // baseEntry.getClosingBalance())
+        // .remainingAmount(lastEntry.getRemainingAmount() +
+        // baseEntry.getRemainingAmount())
+        // .pvOfCf(baseEntry.getPvOfCf())
+        // .leasePaymentStatus(LeasePaymentStatus.PENDING)
+        // .build();
+        // }
+
+        private boolean checkIfWeekendOrHoliday(LocalDate currentDate, List<String> holidaysList) {
+                if (currentDate.getDayOfWeek() == DayOfWeek.SUNDAY
+                                || DailyLeaseScheduleCalculator.isHoliday(currentDate, holidaysList)) {
+                        return true;
+                }
+                return false;
+        }
+
+        private void adjustEntryValues(AmortizationEntry entry, AmortizationEntry targetEntry) {
+                entry.setCumulativePrincipal(
+                                entry.getCumulativePrincipal() - targetEntry.getPrincipalComponent());
+        }
 }
