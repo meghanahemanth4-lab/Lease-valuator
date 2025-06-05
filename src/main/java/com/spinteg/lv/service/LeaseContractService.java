@@ -45,9 +45,11 @@ public class LeaseContractService {
             throw new CustomDataMissingException("Please enter the Base Rent in the Installment Amount Split");
         }
 
-        try {
+        try 
+        {
             VehicleStatus.valueOf(dto.getVehicleStatus());
-        } catch (IllegalArgumentException | NullPointerException e) {
+        } 
+        catch (IllegalArgumentException | NullPointerException e) {
             throw new CustomDataMissingException("Invalid Vehicle Status: " + dto.getVehicleStatus());
         }
 
@@ -108,7 +110,9 @@ public class LeaseContractService {
 
         leaseContract.setVehicleNo(vehicleNoObjNew);
 
-        List<String> holidaysList = holidayservice.getHolidaysDatesForCountry(dto.getCountry());
+        // List<String> holidaysList = holidayservice.getHolidaysDatesForCountry(dto.getCountry());
+        List<String> holidaysList = holidayservice.getHolidaysDatesForCountryAndYear(dto.getCountry());
+        
 
         LeaseScheduleCalculator generator = LeaseScheduleFactory.getLeaseScheduleGenerator(
                 contractType.getPaymentFrequency(), (double) contractType.getInterestRate(),
@@ -126,7 +130,8 @@ public class LeaseContractService {
     }
 
     public Customer saveLeaseCustomerDetails(CreateLeaseContractDTO dto) {
-        if (customerRepository.existsByCustomerNumber(dto.getCustomerNumber())) {
+        if (customerRepository.existsByCustomerNumber(dto.getCustomerNumber())) 
+        {
 
             if (customerRepository.findByCustomerNumber(dto.getCustomerNumber()).isLeaseContract() == true) {
                 throw new CustomDataMissingException(
@@ -139,7 +144,9 @@ public class LeaseContractService {
                             .contractTypeId(dto.getContractTypeId()).build());
             customer.setLeaseContract(true);
             return customerRepository.saveAndFlush(customer);
-        } else {
+        } 
+        else 
+        {
             Customer customer = Customer.builder()
                     .customerNumber(dto.getCustomerNumber())
                     .customerName(dto.getCustomerName())

@@ -16,12 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -153,7 +158,7 @@ public class AmortizationEntryUpdateService {
         public void changeToNoRentDay(LocalDate date, LeaseContract contract) {
 
                 List<AmortizationEntry> amortizationEntries = contract.getAmortizationEntries();
-                List<String> holidaysList = holidayService.getHolidaysDatesForCountry(contract.getCountry());
+                List<String> holidaysList = holidayService.getHolidaysDatesForCountryAndYear(contract.getCountry());
                 if (amortizationEntries.isEmpty()) {
                         return;
                 }
@@ -184,8 +189,10 @@ public class AmortizationEntryUpdateService {
                 AmortizationEntry targetEntry = null;
                 boolean created = false;
                 AmortizationEntry previousEntry = null;
-                for (AmortizationEntry entry : new ArrayList<>(entries)) 
-                {
+
+                entries.sort(Comparator.comparing(AmortizationEntry::getPeriod));
+
+                for (AmortizationEntry entry : new ArrayList<>(entries)) {
                         previousEntry = entry;
                         if (!created && entry.getDate().isEqual(targetDate)) {
 
@@ -209,7 +216,9 @@ public class AmortizationEntryUpdateService {
                         }
 
                         else if (created && targetEntry != null) {
-
+                                if (entry.getDate().isBefore(targetDate)) {
+                                        continue;
+                                }
                                 adjustEntryValues(entry, targetEntry);
 
                                 if (entry.getDate().isEqual(contract.getEndDate())) {
@@ -235,7 +244,7 @@ public class AmortizationEntryUpdateService {
                                 }
                         }
                 }
-                
+
                 amortizationEntryRepository.flush();
 
         }
@@ -274,7 +283,12 @@ public class AmortizationEntryUpdateService {
         private AmortizationEntry noRentEntryCalculationForFirstNoRentDay(AmortizationEntry originalEntry,
                         LeaseContract contract,
                         LocalDate targetDate, Long period, AmortizationEntry previousEntry) {
-                // Create placeholder No-Rent Day entry
+
+                double cumulativePrincipal = originalEntry.getCumulativePrincipal()
+                                - originalEntry.getPrincipalComponent();
+
+                cumulativePrincipal = adjustNearZero(cumulativePrincipal);
+
                 AmortizationEntry noRentEntry = AmortizationEntry.builder()
                                 .leaseContract(contract)
                                 .date(targetDate)
@@ -289,8 +303,8 @@ public class AmortizationEntryUpdateService {
                                                 originalEntry.getCumulativeInstallment())
                                 .cumulativeInterest(originalEntry.getCumulativeInterest())
                                 .leasePaymentStatus(LeasePaymentStatus.NO_RENT_DAY)
-                                .cumulativePrincipal(originalEntry.getCumulativePrincipal()
-                                                - originalEntry.getPrincipalComponent())
+                                .cumulativePrincipal(cumulativePrincipal)
+                                .leaseContract(contract)
                                 .principalComponent(0.0)
                                 .remainingAmount(originalEntry.getRemainingAmount())
                                 .pvOfCf(0.0)
@@ -382,7 +396,18 @@ public class AmortizationEntryUpdateService {
         }
 
         private void adjustEntryValues(AmortizationEntry entry, AmortizationEntry targetEntry) {
-                entry.setCumulativePrincipal(
-                                entry.getCumulativePrincipal() - targetEntry.getPrincipalComponent());
+                double newCumulativePrincipal = entry.getCumulativePrincipal() - targetEntry.getPrincipalComponent();
+                newCumulativePrincipal = adjustNearZero(newCumulativePrincipal);
+                entry.setCumulativePrincipal(newCumulativePrincipal);
         }
+
+        private double adjustNearZero(double val) {
+                BigInteger cumulativePrincipalValue = BigInteger.valueOf((long) val);
+
+                if (cumulativePrincipalValue.compareTo(BigInteger.ZERO) <= 0) {
+                        val = 0.0d;
+                }
+                return val;
+        }
+
 }

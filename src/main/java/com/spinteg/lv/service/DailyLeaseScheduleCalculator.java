@@ -135,7 +135,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
 
     public static boolean isHoliday(LocalDate date, List<String> list) {
         boolean flag = list.stream()
-                .anyMatch(holidayDate -> DateMatcher.isMatchingDate(date, holidayDate));
+                .anyMatch(holidayDate -> DateMatcher.isMatchingDateOrNot(date, holidayDate));
         return flag;
     }
 
