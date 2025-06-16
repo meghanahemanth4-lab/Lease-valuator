@@ -1,5 +1,6 @@
 package com.spinteg.lv.service;
 
+import com.amazonaws.services.ec2.model.WeekDay;
 import com.spinteg.lv.dto.AmortizationEntryUpdateDTO;
 import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.LeaseContract;
@@ -147,6 +148,10 @@ public class AmortizationEntryUpdateService {
                 if (date.isBefore(LocalDate.now()))
                         throw new CustomDataMissingException("It cannot be applied to no-rent day");
 
+                if (checkIfSunday(date)) // Check if the date is a Sunday
+                {
+                        throw new CustomDataMissingException("It cannot be applied to no-rent day on Sunday");
+                }
                 List<LeaseContract> leaseContracts = leaseContractRepository.findByStatus(LeaseContractStatus.ACTIVE);
 
                 for (LeaseContract contract : leaseContracts) {
@@ -179,7 +184,6 @@ public class AmortizationEntryUpdateService {
                 }
 
                 handleNoRentDay(amortizationEntries, date, contract, holidaysList);
-
         }
 
         @Transactional
@@ -331,7 +335,7 @@ public class AmortizationEntryUpdateService {
                                                 + originalEntry.getInterestComponent())
                                 .closingBalance(originalEntry.getClosingBalance())
                                 .principalComponent(0.0)
-                                .leasePaymentStatus(LeasePaymentStatus.NO_RENT_DAY)
+                                .leasePaymentStatus(LeasePaymentStatus.NO_RENT_DAY_FUTURE)
                                 .remainingAmount(originalEntry.getRemainingAmount())
                                 .pvOfCf(0.0)
                                 .build();
@@ -390,6 +394,13 @@ public class AmortizationEntryUpdateService {
         private boolean checkIfWeekendOrHoliday(LocalDate currentDate, List<String> holidaysList) {
                 if (currentDate.getDayOfWeek() == DayOfWeek.SUNDAY
                                 || DailyLeaseScheduleCalculator.isHoliday(currentDate, holidaysList)) {
+                        return true;
+                }
+                return false;
+        }
+
+        private boolean checkIfSunday(LocalDate currentDate) {
+                if (currentDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
                         return true;
                 }
                 return false;
