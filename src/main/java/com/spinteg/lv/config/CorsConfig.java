@@ -15,6 +15,8 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(
                                 "https://qa-lva.spironet.com",
+                                "http://192.168.0.217:3000",
+                                "http://localhost:3000",
                                 "https://qa-lva-api.spironet.com")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")

@@ -59,19 +59,8 @@ public class HolidayService {
 
         List<String> dates = new ArrayList<>();
         try {
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("HolidayCalenderMain.json");
 
-            if (inputStream == null) {
-                throw new FileNotFoundException("HolidayCalenderMain.json not found in resources folder");
-            }
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(inputStream);
-            JsonNode countryNode = rootNode.get(country.trim().toLowerCase());
-            if (countryNode == null || countryNode.isNull()) {
-                throw new CustomDataMissingException("Country not found: " + country);
-            }
+            JsonNode countryNode = isCountryExists(country);
 
             Iterator<Map.Entry<String, JsonNode>> fieldsWithYears = countryNode.fields();
 
@@ -99,7 +88,7 @@ public class HolidayService {
                 }
             }
             System.out.println(dates);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -109,6 +98,28 @@ public class HolidayService {
             return getHolidaysDatesForCountry(country);
         }
         return dates;
+    }
+
+    public JsonNode isCountryExists(String country) {
+
+        try {
+            InputStream inputStream = getClass().getClassLoader()
+                    .getResourceAsStream("HolidayCalenderMain.json");
+
+            if (inputStream == null) {
+                throw new FileNotFoundException("HolidayCalenderMain.json not found in resources folder");
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+            JsonNode countryNode = rootNode.get(country.trim().toLowerCase());
+            if (countryNode == null || countryNode.isNull()) {
+                throw new CustomDataMissingException("Country not found: " + country);
+            }
+            return countryNode;
+        } catch (IOException e) {
+            throw new DataNotFoundException("Error reading the holiday data for country: " + country);
+        }
     }
 
     private List<String> createTheDefaultHolidaysForthatYear(String country, String year) {

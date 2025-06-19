@@ -25,6 +25,6 @@ public class NoRentDayEntryController {
 
     @PostMapping("set-no-rent-day")
     public ResponseEntity<?> changeToNoRentDay(@RequestBody NoRentDayEntryDTO dayEntryDTO) {
-        return amortizationEntryUpdateService.updateAmortizationEntryToNoRentDay(dayEntryDTO.getDate());
+        return amortizationEntryUpdateService.updateAmortizationEntryToNoRentDay(dayEntryDTO.getDate(), dayEntryDTO.getCountry());
     }
 }

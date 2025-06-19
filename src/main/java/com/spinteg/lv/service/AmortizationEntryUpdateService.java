@@ -2,6 +2,7 @@ package com.spinteg.lv.service;
 
 import com.amazonaws.services.ec2.model.WeekDay;
 import com.spinteg.lv.dto.AmortizationEntryUpdateDTO;
+import com.spinteg.lv.dto.NoRentDayUtilityDTO;
 import com.spinteg.lv.entity.AmortizationEntry;
 import com.spinteg.lv.entity.LeaseContract;
 import com.spinteg.lv.entity.enums.LeaseContractStatus;
@@ -141,9 +142,11 @@ public class AmortizationEntryUpdateService {
                 }
         }
 
-        public ResponseEntity<?> updateAmortizationEntryToNoRentDay(LocalDate date) {
+        public ResponseEntity<?> updateAmortizationEntryToNoRentDay(LocalDate date, String country) {
 
                 DataValidation.isValidDate(date.toString(), "Date");
+
+                holidayService.isCountryExists(country);
 
                 if (date.isBefore(LocalDate.now()))
                         throw new CustomDataMissingException("It cannot be applied to no-rent day");
@@ -152,7 +155,8 @@ public class AmortizationEntryUpdateService {
                 {
                         throw new CustomDataMissingException("It cannot be applied to no-rent day on Sunday");
                 }
-                List<LeaseContract> leaseContracts = leaseContractRepository.findByStatus(LeaseContractStatus.ACTIVE);
+                List<LeaseContract> leaseContracts = leaseContractRepository
+                                .findByStatusAndCountry(LeaseContractStatus.ACTIVE, country);
 
                 for (LeaseContract contract : leaseContracts) {
                         changeToNoRentDay(date, contract);
@@ -193,6 +197,7 @@ public class AmortizationEntryUpdateService {
                 AmortizationEntry targetEntry = null;
                 boolean created = false;
                 AmortizationEntry previousEntry = null;
+                NoRentDayUtilityDTO noRentDayUtilityDTO = new NoRentDayUtilityDTO();
 
                 entries.sort(Comparator.comparing(AmortizationEntry::getPeriod));
 
@@ -201,6 +206,9 @@ public class AmortizationEntryUpdateService {
                         if (!created && entry.getDate().isEqual(targetDate)) {
 
                                 targetEntry = entry;
+
+                                noRentDayUtilityDTO.setPrincipal_component(entry.getPrincipalComponent());
+                                noRentDayUtilityDTO.setPv_of_cf(entry.getPvOfCf());
 
                                 AmortizationEntry noRentEntryFirst = noRentEntryCalculationForFirstNoRentDay(entry,
                                                 contract,
@@ -223,7 +231,9 @@ public class AmortizationEntryUpdateService {
                                 if (entry.getDate().isBefore(targetDate)) {
                                         continue;
                                 }
-                                adjustEntryValues(entry, targetEntry);
+
+                                noRentDayUtilityDTO = adjustEntryValues(entry, targetEntry, noRentDayUtilityDTO,
+                                                entry.getDate(), holidays);
 
                                 if (entry.getDate().isEqual(contract.getEndDate())) {
 
@@ -240,7 +250,7 @@ public class AmortizationEntryUpdateService {
                                         }
 
                                         AmortizationEntry finalEntry = penndingEntryCalculation(contract, targetEntry,
-                                                        lastEntry, lastEntry.getPeriod() + 1);
+                                                        lastEntry, lastEntry.getPeriod() + 1, noRentDayUtilityDTO);
                                         contract.setEndDate(finalEntry.getDate());
                                         amortizationEntryRepository.save(finalEntry);
                                         leaseContractRepository.save(contract);
@@ -254,8 +264,10 @@ public class AmortizationEntryUpdateService {
         }
 
         private AmortizationEntry penndingEntryCalculation(LeaseContract contract, AmortizationEntry originalEntry,
-                        AmortizationEntry lastEntry, long period) {
+                        AmortizationEntry lastEntry, long period, NoRentDayUtilityDTO noRentDayUtilityDTO) {
+
                 AmortizationEntry amortizationEntry = AmortizationEntry.builder()
+
                                 .leaseContract(contract)
                                 .date(lastEntry.getDate().plusDays(1))
                                 .period(period)
@@ -263,7 +275,8 @@ public class AmortizationEntryUpdateService {
                                 .insurance(originalEntry.getInsurance())
                                 .maintenance(originalEntry.getMaintenance())
 
-                                .principalComponent(originalEntry.getPrincipalComponent())
+                                // .principalComponent(originalEntry.getPrincipalComponent())
+                                .principalComponent(noRentDayUtilityDTO.getPrincipal_component())
                                 .cumulativePrincipal(lastEntry.getCumulativePrincipal()
                                                 + originalEntry.getPrincipalComponent())
 
@@ -279,7 +292,8 @@ public class AmortizationEntryUpdateService {
 
                                 .leasePaymentStatus(LeasePaymentStatus.PENDING)
                                 .remainingAmount(lastEntry.getRemainingAmount())
-                                .pvOfCf(originalEntry.getPvOfCf())
+                                // .pvOfCf(originalEntry.getPvOfCf())
+                                .pvOfCf(noRentDayUtilityDTO.getPv_of_cf())
                                 .build();
                 return amortizationEntry;
         }
@@ -406,10 +420,24 @@ public class AmortizationEntryUpdateService {
                 return false;
         }
 
-        private void adjustEntryValues(AmortizationEntry entry, AmortizationEntry targetEntry) {
+        private NoRentDayUtilityDTO adjustEntryValues(AmortizationEntry entry, AmortizationEntry targetEntry,
+                        NoRentDayUtilityDTO noRentDayUtilityDTO, LocalDate checkDate, List<String> holidays) {
+
                 double newCumulativePrincipal = entry.getCumulativePrincipal() - targetEntry.getPrincipalComponent();
                 newCumulativePrincipal = adjustNearZero(newCumulativePrincipal);
                 entry.setCumulativePrincipal(newCumulativePrincipal);
+
+                if (checkIfWeekendOrHoliday(checkDate, holidays) == false) {
+                        double newPvOfCf = entry.getPvOfCf();
+                        double newPrincipalComponent = entry.getPrincipalComponent();
+                        entry.setPrincipalComponent(Double.valueOf(noRentDayUtilityDTO.getPrincipal_component()));
+                        entry.setPvOfCf(Double.valueOf(noRentDayUtilityDTO.getPv_of_cf()));
+
+                        noRentDayUtilityDTO.setPrincipal_component(newPrincipalComponent);
+                        noRentDayUtilityDTO.setPv_of_cf(newPvOfCf);
+                }
+
+                return noRentDayUtilityDTO;
         }
 
         private double adjustNearZero(double val) {

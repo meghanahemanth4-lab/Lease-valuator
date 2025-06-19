@@ -19,13 +19,16 @@ public class SwaggerConfig {
         Server localServer = new Server()
                 .url("http://localhost:8080")
                 .description("Local API server");
+        Server localServer2 = new Server()
+                .url("http://192.168.0.217:8080")
+                .description("Local API server");
 
         return new OpenAPI()
                 .info(new Info()
                         .title("Lease Valuator API")
                         .version("1.0.0")
                         .description("API documentation for Lease Valuator QA environment"))
-                .servers(List.of(qaServer, localServer));
+                .servers(List.of(qaServer, localServer, localServer2));
     }
 }
 
