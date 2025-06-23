@@ -23,5 +23,5 @@ public class ContractTypeDTO {
     private float maintenanceAmount;
     private float insuranceAmount;
     private float downpayment;
-    private float swap;
+    private float swapAmount;
 }

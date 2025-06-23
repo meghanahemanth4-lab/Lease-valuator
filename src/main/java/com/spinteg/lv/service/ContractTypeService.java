@@ -64,7 +64,7 @@ public class ContractTypeService {
         contractType.setBaseRent(null);
         contractType.setInsuranceAmount(null);
         contractType.setMaintenanceAmount(null);
-        contractType.setSwap(null);
+        contractType.setSwapAmount(null);
         contractType.setVehicleStatus(VehicleStatus.NEW);
         contractType.setContractTypeId(createContractTypeDTO.getContractName());
         contractType.setContractCode(createContractTypeDTO.getContractCode());
@@ -158,12 +158,12 @@ public class ContractTypeService {
                 Float.valueOf(
                         DataValidation.isInteger(objContractType.getInsuranceAmount(), "Insurance Amount")));
 
-        contractType.setSwap(
+        contractType.setSwapAmount(
                 Float.valueOf(
                         DataValidation.isInteger(objContractType.getSwapAmount(), "Swap Amount")));
 
         if (contractType.getInstallment() != (contractType.getInsuranceAmount() + contractType.getMaintenanceAmount()
-                + contractType.getBaseRent() + contractType.getSwap()))
+                + contractType.getBaseRent() + contractType.getSwapAmount()))
             throw new CustomDataMissingException(
                     "Installment Amount is not equal to sum of Base Rent, Insurance Amount, Maintenance Amount and Swap Amount");
 

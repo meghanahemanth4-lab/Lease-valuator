@@ -72,7 +72,7 @@ public class MonthlyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                                                         : leaseContract.getContractType().getInsuranceAmount())
                                         .maintenance(monthlyValue.getMonthlyInstallment() == 0 ? 0.0
                                                         : leaseContract.getContractType().getMaintenanceAmount())
-                                        .swap(monthlyValue.getMonthlyInstallment() == 0 ? 0.0 : leaseContract.getContractType().getSwap()) 
+                                        .swapAmount(monthlyValue.getMonthlyInstallment() == 0 ? 0.0 : leaseContract.getContractType().getSwapAmount()) 
                                         .cumulativeInstallment(monthlyValue.getCumulativeInstallmentPaid())
                                         .closingBalance(monthlyValue.getClosingBalance())
                                         .outstandingBalance(monthlyValue.getOutstandingAmount())

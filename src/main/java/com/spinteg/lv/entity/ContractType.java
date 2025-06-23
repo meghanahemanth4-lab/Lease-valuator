@@ -65,7 +65,7 @@ public class ContractType {
     @Column(name = "vehicle_status", columnDefinition = "contract.vehicle_status")
     private VehicleStatus vehicleStatus;
 
-    @Column(name = "swap")
-    private Float swap;
+    @Column(name = "swap_amount")
+    private Float swapAmount;
 
 }

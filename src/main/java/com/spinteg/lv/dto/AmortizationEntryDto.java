@@ -26,7 +26,7 @@ public class AmortizationEntryDto {
     private Double percentageOfInterest;
     private Double percentageOfPrincipal;
     private LocalDate transactionDate; 
-    private Double swap;
+    private Double swapAmount;
 
     // Getters and Setters
 }

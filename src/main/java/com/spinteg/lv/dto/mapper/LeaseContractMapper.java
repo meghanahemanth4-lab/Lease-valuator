@@ -29,7 +29,7 @@ public class LeaseContractMapper {
                                 contractType.getMaintenanceAmount(),
                                 contractType.getInsuranceAmount(),
                                 contractType.getDownpayment(),
-                                contractType.getSwap());
+                                contractType.getSwapAmount());
         }
 
         public static LeaseContractDTO toLeaseContractDTO(LeaseContract leaseContract) {
@@ -128,7 +128,7 @@ public class LeaseContractMapper {
                                 principalComponent / (interestComponent + principalComponent));
                 amortizationEntryDto.setPvOfCf(amortizationEntry.getPvOfCf());
                 amortizationEntryDto.setTransactionDate(amortizationEntry.getTransactionDate());
-                amortizationEntryDto.setSwap(amortizationEntry.getSwap());
+                amortizationEntryDto.setSwapAmount(amortizationEntry.getSwapAmount());
                 return amortizationEntryDto;
         }
 }
