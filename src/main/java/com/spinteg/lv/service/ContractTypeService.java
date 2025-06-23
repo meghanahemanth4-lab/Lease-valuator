@@ -64,6 +64,7 @@ public class ContractTypeService {
         contractType.setBaseRent(null);
         contractType.setInsuranceAmount(null);
         contractType.setMaintenanceAmount(null);
+        contractType.setSwap(null);
         contractType.setVehicleStatus(VehicleStatus.NEW);
         contractType.setContractTypeId(createContractTypeDTO.getContractName());
         contractType.setContractCode(createContractTypeDTO.getContractCode());
@@ -83,7 +84,6 @@ public class ContractTypeService {
                 DataValidation.isNotZero(
                         DataValidation.isNumeric(createContractTypeDTO.getInstallment(), "Installment"),
                         "Installment")));
-        contractType.setSwap(0f);
         contractTypeRepository.save(contractType);
         return ResponseHandler.handleResponseEntity("ContractType Created", contractType, null);
     }
@@ -136,8 +136,9 @@ public class ContractTypeService {
         if (objContractType.getMaintenanceAmount() == null || objContractType.getMaintenanceAmount().trim() == "")
             throw new CustomDataMissingException("Maintenance Amount cannot be null or empty");
 
-        // if (objContractType.getSwapAmount() == null || objContractType.getSwapAmount().trim() == "") {
-        //     throw new CustomDataMissingException("Swap Amount cannot be null or empty");
+        // if (objContractType.getSwapAmount() == null ||
+        // objContractType.getSwapAmount().trim() == "") {
+        // throw new CustomDataMissingException("Swap Amount cannot be null or empty");
         // }
         // if (Integer.valueOf(objContractType.getBaseRent().trim()) <= 0)
         // throw new CustomDataMissingException("Base Rent should be greater than 0");
@@ -157,10 +158,10 @@ public class ContractTypeService {
                 Float.valueOf(
                         DataValidation.isInteger(objContractType.getInsuranceAmount(), "Insurance Amount")));
 
-        // contractType.setSwap(
-        //         Float.valueOf(
-        //                 DataValidation.isInteger(objContractType.getSwapAmount(), "Swap Amount")));
-        contractType.setSwap(0f);
+        contractType.setSwap(
+                Float.valueOf(
+                        DataValidation.isInteger(objContractType.getSwapAmount(), "Swap Amount")));
+
         if (contractType.getInstallment() != (contractType.getInsuranceAmount() + contractType.getMaintenanceAmount()
                 + contractType.getBaseRent() + contractType.getSwap()))
             throw new CustomDataMissingException(
