@@ -88,4 +88,7 @@ public class AmortizationEntry {
 
     @Column(name = "transaction_date")
     private LocalDate transactionDate;
+
+    @Column(name = "swap")
+    private Double swap;
 }

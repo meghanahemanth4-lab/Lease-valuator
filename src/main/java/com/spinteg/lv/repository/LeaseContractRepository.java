@@ -240,4 +240,22 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
 
     public List<LeaseContract> findByVehicleNo(VehicleNo vehicleNo);
 
+    @Query(value = """
+    SELECT SUM(ae.swap)
+    FROM contract.lease_contract lc
+    JOIN contract.amortization_entry ae
+    ON lc.contract_no = ae.lease_contract
+    JOIN contract.contract_type ct
+    ON lc.contract_type_id = ct.contract_type_id
+    WHERE ct.deployment = CAST(:deployment AS contract.deployment)
+    AND ct.type_of_vehicle = CAST(:vehicleType AS contract.vehicle_type)
+    AND ae.lease_payment_status = 'PAID'
+    AND EXTRACT(MONTH FROM ae.transaction_date) = :month
+    AND EXTRACT(YEAR FROM ae.transaction_date) = :year
+    """, nativeQuery = true)
+    Float sumSwapByDeploymentAndVehicleTypeAndMonthAndYear(
+    String deployment,
+    String vehicleType,
+    int month,
+    int year);
 }

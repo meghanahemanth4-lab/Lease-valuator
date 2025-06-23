@@ -79,8 +79,15 @@ public class AccountingEntryService {
         dto.setLeaseReceivableInterestIncomeCr(dto.getLeaseReceivableInterestIncomeDr());
         dto.setBikeSaleFinanceLeaseDr(dto.getRentalCollectionWalletDr());
         dto.setLeaseReceivableCr(dto.getBikeSaleFinanceLeaseDr());
-        dto.setSwapCollectionWalletDr(0f);
-        dto.setSwapRevenueCr(0f);
+        dto.setSwapCollectionWalletDr(
+                leaseContractRepository.sumSwapByDeploymentAndVehicleTypeAndMonthAndYear(
+                        update.getDeployment().name(),
+                        VehicleType.fromValue(update.getVehicleType()).name(),
+                        update.getMonth(),
+                        update.getYear()
+                )
+        );
+        dto.setSwapRevenueCr(dto.getSwapCollectionWalletDr());
         dto.setTvaCr(0f);
         dto.setDownpaymentCollectionWalletDr(leaseContractRepository
                 .sumofDownpaymentReceivedByDeploymentAndVsehicleTypeAndMonthAndYear(

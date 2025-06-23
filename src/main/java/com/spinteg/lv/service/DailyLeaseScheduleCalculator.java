@@ -82,6 +82,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                         .baseRent(Double.valueOf(leaseContract.getContractType().getBaseRent()))
                         .insurance(Double.valueOf(leaseContract.getContractType().getInsuranceAmount()))
                         .maintenance(Double.valueOf(leaseContract.getContractType().getMaintenanceAmount()))
+                        .swap(Double.valueOf(leaseContract.getContractType().getSwap())) // <-- Add this line
                         .interestComponent(interestComponent)
                         .cumulativePrincipal(cumulativePrincipal)
                         .cumulativeInstallment(cumulativeInstallment)
@@ -110,6 +111,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                         .installment(installment)
                         .baseRent(0.0)
                         .maintenance(0.0)
+                        .swap(0.0) // <-- Add this line
                         .insurance(0.0)
                         .interestComponent(interestComponent)
                         .cumulativePrincipal(cumulativePrincipal)
