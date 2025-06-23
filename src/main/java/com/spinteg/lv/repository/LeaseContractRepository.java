@@ -241,7 +241,7 @@ public interface LeaseContractRepository extends JpaRepository<LeaseContract, UU
     public List<LeaseContract> findByVehicleNo(VehicleNo vehicleNo);
 
     @Query(value = """
-    SELECT SUM(ae.swap)
+    SELECT SUM(ae.swap_amount)
     FROM contract.lease_contract lc
     JOIN contract.amortization_entry ae
     ON lc.contract_no = ae.lease_contract
