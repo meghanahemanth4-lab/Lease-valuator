@@ -27,6 +27,6 @@ public class LeaseContractDTO {
     private ContractTypeDTO contractTypeDTO;
     private VehicleStatus vehicleStatus;
     private Integer noOfTimesDeployed;
-    private BigDecimal sumOfPvOfCf; // Add this field
+    private BigDecimal sumOfPvOfCf;
 
 }

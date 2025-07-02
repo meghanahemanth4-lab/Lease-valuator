@@ -17,6 +17,9 @@ public class LeaseScheduleFactory {
             case MONTHLY:
                 return new MonthlyLeaseScheduleCalculator(interestRatePerAnnum, downpayment, fixedDailyRental,
                         tenureInDays, startDate, leaseContractRepository);
+            case MONTHLY_V2:
+                return new MonthlyV2LeaseScheduleCalculator(interestRatePerAnnum, downpayment, fixedDailyRental,
+                        tenureInDays, startDate, leaseContractRepository);
             default:
                 throw new CustomDataMissingException("Unsupported frequency type");
         }
