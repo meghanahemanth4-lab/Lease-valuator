@@ -20,7 +20,7 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
     private final LocalDate startDate;
     private final LeaseContractRepository leaseContractRepository;
 
-    public MonthlyV2LeaseScheduleCalculator(Double interestRatePerAnnum, Double downpayment, Double fixedMonthlyPayment,
+    public MonthlyV2LeaseScheduleCalculator(Double interestRatePerAnnum,  Double fixedMonthlyPayment,Double downpayment,
             int tenureInDays, LocalDate startDate, LeaseContractRepository leaseContractRepository) {
         this.interestRatePerAnnum = interestRatePerAnnum;
         this.downpayment = downpayment;
@@ -31,11 +31,13 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
     }
 
     @Override
-    public List<AmortizationEntry> generateAmortizationSchedule(LeaseContract leaseContract, List<String> holidaysList) {
+    public List<AmortizationEntry> generateAmortizationSchedule(LeaseContract leaseContract,
+            List<String> holidaysList) {
         List<AmortizationEntry> schedule = new ArrayList<>();
         int periods = tenureInDays; // Use tenure as number of periods
-        double outstandingAmount = fixedMonthlyPayment * periods; // Simplified
         double monthlyInterestRate = interestRatePerAnnum / 1200;
+        double installment = leaseContract.getContractType().getBaseRent() == null ? 0.0 : leaseContract.getContractType().getBaseRent().doubleValue();
+        double outstandingAmount = calculateOutstandingAmount(monthlyInterestRate, periods, installment);
         double cumulativeInstallment = 0, cumulativeInterest = 0, cumulativePrincipal = 0;
 
         // Set paymentDate to the next 1st of the month after startDate
@@ -47,8 +49,9 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
             LocalDate emiDate = paymentDate.plusMonths(i);
 
             double interestComponent = outstandingAmount * monthlyInterestRate;
-            double principalComponent = fixedMonthlyPayment - interestComponent;
-            cumulativeInstallment += fixedMonthlyPayment;
+            double principalComponent = installment - interestComponent;
+
+            cumulativeInstallment += installment;
             cumulativeInterest += interestComponent;
             cumulativePrincipal += principalComponent;
             outstandingAmount -= principalComponent;
@@ -58,8 +61,8 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
                     .leaseContract(leaseContract)
                     .date(emiDate)
                     .period((long) (i + 1))
-                    .installment(fixedMonthlyPayment)
-                    .baseRent(leaseContract.getContractType().getBaseRent() == null ? 0.0 : leaseContract.getContractType().getBaseRent().doubleValue())
+                    .installment(installment)
+                    .baseRent(installment)
                     .insurance(leaseContract.getContractType().getInsuranceAmount() == null ? 0.0 : leaseContract.getContractType().getInsuranceAmount().doubleValue())
                     .maintenance(leaseContract.getContractType().getMaintenanceAmount() == null ? 0.0 : leaseContract.getContractType().getMaintenanceAmount().doubleValue())
                     .swapAmount(leaseContract.getContractType().getSwapAmount() == null ? 0.0 : leaseContract.getContractType().getSwapAmount().doubleValue())
@@ -71,13 +74,23 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
                     .cumulativePrincipal(cumulativePrincipal)
                     .cumulativeInterest(cumulativeInterest)
                     .remainingAmount(outstandingAmount)
-                    .pvOfCf(fixedMonthlyPayment / Math.pow(1 + monthlyInterestRate, i + 1))
+                    .pvOfCf(installment / Math.pow(1 + monthlyInterestRate, i + 1))
                     .leasePaymentStatus(LeasePaymentStatus.PENDING)
                     .build();
             schedule.add(entry);
         }
-        leaseContract.setSumOfPvOfCf(BigDecimal.valueOf(schedule.stream().mapToDouble(AmortizationEntry::getPvOfCf).sum()));
+        leaseContract
+                .setSumOfPvOfCf(BigDecimal.valueOf(schedule.stream().mapToDouble(AmortizationEntry::getPvOfCf).sum()));
         leaseContractRepository.save(leaseContract);
         return schedule;
+    }
+
+    public double calculateOutstandingAmount(double monthlyInterestRate, int totalMonths, double installment) {
+        double outstandingAmount = 0.0;
+        for (int month = 1; month <= totalMonths; month++) {
+            double discountFactor = Math.pow(1 + monthlyInterestRate, month);
+            outstandingAmount += installment / discountFactor;
+        }
+        return outstandingAmount;
     }
 }
