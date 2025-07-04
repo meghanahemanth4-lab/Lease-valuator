@@ -7,7 +7,9 @@ import com.spinteg.lv.repository.LeaseContractRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,7 +22,7 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
     private final LocalDate startDate;
     private final LeaseContractRepository leaseContractRepository;
 
-    public MonthlyV2LeaseScheduleCalculator(Double interestRatePerAnnum,  Double fixedMonthlyPayment,Double downpayment,
+    public MonthlyV2LeaseScheduleCalculator(Double interestRatePerAnnum, Double fixedMonthlyPayment, Double downpayment,
             int tenureInDays, LocalDate startDate, LeaseContractRepository leaseContractRepository) {
         this.interestRatePerAnnum = interestRatePerAnnum;
         this.downpayment = downpayment;
@@ -36,7 +38,8 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
         List<AmortizationEntry> schedule = new ArrayList<>();
         int periods = tenureInDays; // Use tenure as number of periods
         double monthlyInterestRate = interestRatePerAnnum / 1200;
-        double installment = leaseContract.getContractType().getBaseRent() == null ? 0.0 : leaseContract.getContractType().getBaseRent().doubleValue();
+        double installment = leaseContract.getContractType().getBaseRent() == null ? 0.0
+                : leaseContract.getContractType().getBaseRent().doubleValue();
         double outstandingAmount = calculateOutstandingAmount(monthlyInterestRate, periods, installment);
         double cumulativeInstallment = 0, cumulativeInterest = 0, cumulativePrincipal = 0;
 
@@ -44,7 +47,6 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
         LocalDate paymentDate = startDate.getDayOfMonth() == 1
                 ? startDate
                 : startDate.plusMonths(1).withDayOfMonth(1);
-
         for (int i = 0; i < periods; i++) {
             LocalDate emiDate = paymentDate.plusMonths(i);
 
@@ -63,9 +65,12 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
                     .period((long) (i + 1))
                     .installment(installment)
                     .baseRent(installment)
-                    .insurance(leaseContract.getContractType().getInsuranceAmount() == null ? 0.0 : leaseContract.getContractType().getInsuranceAmount().doubleValue())
-                    .maintenance(leaseContract.getContractType().getMaintenanceAmount() == null ? 0.0 : leaseContract.getContractType().getMaintenanceAmount().doubleValue())
-                    .swapAmount(leaseContract.getContractType().getSwapAmount() == null ? 0.0 : leaseContract.getContractType().getSwapAmount().doubleValue())
+                    .insurance(leaseContract.getContractType().getInsuranceAmount() == null ? 0.0
+                            : leaseContract.getContractType().getInsuranceAmount().doubleValue())
+                    .maintenance(leaseContract.getContractType().getMaintenanceAmount() == null ? 0.0
+                            : leaseContract.getContractType().getMaintenanceAmount().doubleValue())
+                    .swapAmount(leaseContract.getContractType().getSwapAmount() == null ? 0.0
+                            : leaseContract.getContractType().getSwapAmount().doubleValue())
                     .cumulativeInstallment(cumulativeInstallment)
                     .closingBalance(outstandingAmount)
                     .outstandingBalance(outstandingAmount)
@@ -79,6 +84,11 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
                     .build();
             schedule.add(entry);
         }
+        leaseContract.setAmortizationEntries(schedule);
+
+        LocalDate lastDate = calculateEndDate(startDate, leaseContract);
+
+        leaseContract.setEndDate(lastDate);
         leaseContract
                 .setSumOfPvOfCf(BigDecimal.valueOf(schedule.stream().mapToDouble(AmortizationEntry::getPvOfCf).sum()));
         leaseContractRepository.save(leaseContract);
@@ -92,5 +102,18 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
             outstandingAmount += installment / discountFactor;
         }
         return outstandingAmount;
+    }
+
+    public LocalDate calculateEndDate(LocalDate startDate, LeaseContract leaseContract) {
+
+        List<AmortizationEntry> schedule = leaseContract.getAmortizationEntries();
+
+        LocalDate lastDate = schedule.get(schedule.size()-1).getDate();
+
+        YearMonth yearMonth = YearMonth.from(lastDate);
+
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+
+        return lastDay;
     }
 }
