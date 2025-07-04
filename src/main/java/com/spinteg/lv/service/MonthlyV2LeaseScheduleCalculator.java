@@ -104,8 +104,8 @@ public class MonthlyV2LeaseScheduleCalculator implements LeaseScheduleCalculator
         return outstandingAmount;
     }
 
-    public LocalDate calculateEndDate(LocalDate startDate, LeaseContract leaseContract) {
-
+    public LocalDate calculateEndDate(LocalDate startDate, LeaseContract leaseContract) 
+    {
         List<AmortizationEntry> schedule = leaseContract.getAmortizationEntries();
 
         LocalDate lastDate = schedule.get(schedule.size()-1).getDate();
