@@ -7,4 +7,5 @@ public class UpdateContractTypeDTO {
     private String baseRent;
     private String insuranceAmount;
     private String maintenanceAmount;
+    private String swapAmount;
 }

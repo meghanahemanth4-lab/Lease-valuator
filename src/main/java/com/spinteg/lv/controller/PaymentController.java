@@ -28,4 +28,5 @@ public class PaymentController {
     public ResponseEntity<?> updateDownPaymentStatus(@RequestBody DownpaymentDTO downpaymentDTO) {
         return paymentService.updatePaymentStatustobePaid(downpaymentDTO);
     }
+    
 }

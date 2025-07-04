@@ -1,6 +1,7 @@
 package com.spinteg.lv.repository;
 
 import com.spinteg.lv.entity.AmortizationEntry;
+import com.spinteg.lv.entity.LeaseContract;
 import com.spinteg.lv.entity.enums.LeasePaymentStatus;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,6 @@ import java.util.List;
 @Repository
 public interface AmortizationEntryRepository extends JpaRepository<AmortizationEntry, UUID> {
     List<AmortizationEntry> findByDateAndLeasePaymentStatus(LocalDate date, LeasePaymentStatus status);
+
+    List<AmortizationEntry> findByLeaseContractAndDate(LeaseContract contract, LocalDate date);
 }

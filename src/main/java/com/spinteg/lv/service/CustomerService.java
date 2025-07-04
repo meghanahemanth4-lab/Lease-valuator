@@ -3,7 +3,6 @@ package com.spinteg.lv.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import com.spinteg.lv.exception.ResponseHandler;
 import com.spinteg.lv.dto.CustomerDTO;
 import com.spinteg.lv.dto.CustomerDraftReponseDTO;
 import com.spinteg.lv.dto.CustomerInputDTO;
-import com.spinteg.lv.dto.LeaseContractDTO;
 import com.spinteg.lv.dto.mapper.LeaseContractMapper;
 import com.spinteg.lv.entity.ContractType;
 import com.spinteg.lv.entity.Customer;
@@ -53,7 +51,7 @@ public class CustomerService {
                         () -> new DataNotFoundException("Contract Type not found with ID: " + dto.getContractTypeId()));
 
         // Check if the start date and end date are valid
-        holidayservice.getHolidaysDatesForCountry(dto.getCountry());
+        holidayservice.getHolidaysDatesForCountryAndYear(dto.getCountry());
 
         Customer draft = new Customer();
         draft.setCustomerNumber(dto.getCustomerNumber());

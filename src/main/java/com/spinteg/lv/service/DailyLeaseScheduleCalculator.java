@@ -82,6 +82,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                         .baseRent(Double.valueOf(leaseContract.getContractType().getBaseRent()))
                         .insurance(Double.valueOf(leaseContract.getContractType().getInsuranceAmount()))
                         .maintenance(Double.valueOf(leaseContract.getContractType().getMaintenanceAmount()))
+                        .swapAmount(Double.valueOf(leaseContract.getContractType().getSwapAmount())) // <-- Add this line
                         .interestComponent(interestComponent)
                         .cumulativePrincipal(cumulativePrincipal)
                         .cumulativeInstallment(cumulativeInstallment)
@@ -110,6 +111,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
                         .installment(installment)
                         .baseRent(0.0)
                         .maintenance(0.0)
+                        .swapAmount(0.0) 
                         .insurance(0.0)
                         .interestComponent(interestComponent)
                         .cumulativePrincipal(cumulativePrincipal)
@@ -135,7 +137,7 @@ public class DailyLeaseScheduleCalculator implements LeaseScheduleCalculator {
 
     public static boolean isHoliday(LocalDate date, List<String> list) {
         boolean flag = list.stream()
-                .anyMatch(holidayDate -> DateMatcher.isMatchingDate(date, holidayDate));
+                .anyMatch(holidayDate -> DateMatcher.isMatchingDateOrNot(date, holidayDate));
         return flag;
     }
 

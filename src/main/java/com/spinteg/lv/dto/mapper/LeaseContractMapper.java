@@ -28,14 +28,23 @@ public class LeaseContractMapper {
                                 contractType.getBaseRent(),
                                 contractType.getMaintenanceAmount(),
                                 contractType.getInsuranceAmount(),
-                                contractType.getDownpayment());
+                                contractType.getDownpayment(),
+                                contractType.getSwapAmount());
         }
 
         public static LeaseContractDTO toLeaseContractDTO(LeaseContract leaseContract) {
+                String vehicleNo = null;
+                Integer noOfTimesDeployed = 0;
+
+                if (leaseContract.getVehicleNo() != null) {
+                        vehicleNo = leaseContract.getVehicleNo().getVehicleNo();
+                        noOfTimesDeployed = leaseContract.getVehicleNo().getNoOfTimesDeployed();
+                }
+
                 return LeaseContractDTO.builder()
                                 .contractNo(leaseContract.getContractNo())
                                 .customerNumber(leaseContract.getCustomerId())
-                                .vehicleNo(leaseContract.getVehicleNo().getVehicleNo())
+                                .vehicleNo(vehicleNo)
                                 .customerName(leaseContract.getCustomerName())
                                 .leaseContractStatus(leaseContract.getStatus())
                                 .startDate(leaseContract.getStartDate())
@@ -46,7 +55,7 @@ public class LeaseContractMapper {
                                 .country(leaseContract.getCountry())
                                 .contractTypeDTO(toContractTypeDTO(leaseContract.getContractType()))
                                 .vehicleStatus(leaseContract.getVehicleStatus())
-                                .noOfTimesDeployed(leaseContract.getVehicleNo().getNoOfTimesDeployed())
+                                .noOfTimesDeployed(noOfTimesDeployed)
                                 .sumOfPvOfCf(leaseContract.getSumOfPvOfCf())
                                 .build();
         }
@@ -58,7 +67,11 @@ public class LeaseContractMapper {
                 // Mapping LeaseContract fields
                 leaseContractWithAmortizationDTO.setContractNo(leaseContract.getContractNo());
                 leaseContractWithAmortizationDTO.setCustomerId(leaseContract.getCustomerId());
-                leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
+                try {
+                        leaseContractWithAmortizationDTO.setVehicleNo(leaseContract.getVehicleNo().getVehicleNo());
+                } catch (Exception e) {
+                        leaseContractWithAmortizationDTO.setVehicleNo("null");
+                }
                 leaseContractWithAmortizationDTO.setCustomerName(leaseContract.getCustomerName());
                 leaseContractWithAmortizationDTO.setCustomerNumber(leaseContract.getCustomerNumber());
                 leaseContractWithAmortizationDTO.setStartDate(leaseContract.getStartDate());
@@ -115,6 +128,7 @@ public class LeaseContractMapper {
                                 principalComponent / (interestComponent + principalComponent));
                 amortizationEntryDto.setPvOfCf(amortizationEntry.getPvOfCf());
                 amortizationEntryDto.setTransactionDate(amortizationEntry.getTransactionDate());
+                amortizationEntryDto.setSwapAmount(amortizationEntry.getSwapAmount());
                 return amortizationEntryDto;
         }
 }
