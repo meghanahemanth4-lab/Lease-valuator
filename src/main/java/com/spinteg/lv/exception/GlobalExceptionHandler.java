@@ -3,6 +3,10 @@ package com.spinteg.lv.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.slf4j.Logger;
@@ -45,15 +49,34 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorMessage> handleException(Exception ex) {
-        ErrorMessage message = new ErrorMessage(
-                500,
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex, WebRequest request) {
+        
+        String message = "Requested media type is not supported. Supported media types are: " +
+                String.join(", ", MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE);
+        
+        ErrorMessage errorMessage = new ErrorMessage(
+                HttpStatus.NOT_ACCEPTABLE.value(),
                 new Date(System.currentTimeMillis()),
-                "Internal Server Error",
-                ex.getMessage());
+                message,
+                request.getDescription(false));
 
-        return new ResponseEntity<ErrorMessage>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        return new ResponseEntity<>(errorMessage, headers, HttpStatus.NOT_ACCEPTABLE);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorMessage> handleException(Exception ex, WebRequest request) {
+        logger.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+        ErrorMessage message = new ErrorMessage(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                new Date(System.currentTimeMillis()),
+                "An unexpected error occurred: " + ex.getMessage(),
+                request.getDescription(false));
+
+        return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

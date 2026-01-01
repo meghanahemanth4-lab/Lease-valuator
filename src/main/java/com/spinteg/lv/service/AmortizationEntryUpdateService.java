@@ -1,6 +1,6 @@
 package com.spinteg.lv.service;
 
-import com.amazonaws.services.ec2.model.WeekDay;
+
 import com.spinteg.lv.dto.AmortizationEntryUpdateDTO;
 import com.spinteg.lv.dto.NoRentDayUtilityDTO;
 import com.spinteg.lv.entity.AmortizationEntry;

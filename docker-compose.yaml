@@ -22,6 +22,9 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      SPRING_OUTPUT_ANSI_ENABLED: ALWAYS
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_PATTERN_CONSOLE: '%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %-40.40logger{39} : %m%n'
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lease-valuator
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
